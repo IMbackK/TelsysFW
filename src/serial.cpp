@@ -2,47 +2,48 @@
 
 char rxBuffer[BUFFER_SIZE];
 volatile uint32_t interruptIndex = 0;
-NRF_UART_Type *uart_driver = NRF_UART0;
 
 extern "C"
 {
     void UARTE0_UART0_IRQHandler()
     {
-        if (uart_driver->EVENTS_RXDRDY)
+        if (NRF_UART0->EVENTS_RXDRDY)
             {
-                rxBuffer[interruptIndex % BUFFER_SIZE] = uart_driver->RXD;
+                rxBuffer[interruptIndex % BUFFER_SIZE] = NRF_UART0->RXD;
                 interruptIndex++;
-                uart_driver->EVENTS_RXDRDY = 0x0UL;
+                NRF_UART0->EVENTS_RXDRDY = 0x0UL;
             }
     }
 }
 
 
-Serial::Serial() 
+Serial::Serial(const uint32_t rxPin, const uint32_t txPin, NRF_UART_Type *uart_driver): _rxPin(rxPin), _txPin(txPin), _uart_driver(uart_driver)
 {
     //setup uart device
-    uart_driver->PSELTXD = TX_PIN;
-    uart_driver->PSELRXD = RX_PIN;
-    uart_driver->CONFIG = (UART_CONFIG_PARITY_Excluded << UART_CONFIG_PARITY_Pos) | UART_CONFIG_HWFC_Disabled;
-    uart_driver->BAUDRATE = BAUD;
-    uart_driver->ENABLE = UART_ENABLE_ENABLE_Enabled;
-    uart_driver->EVENTS_RXDRDY = 0x0UL;
-    uart_driver->EVENTS_TXDRDY = 0x0UL;
-    uart_driver->TASKS_STARTRX = 0x1UL;
-    uart_driver->TASKS_STARTTX = 0x1UL;
-    uart_driver->INTENSET = UART_INTENSET_RXDRDY_Msk;
-    NVIC_ClearPendingIRQ(irq);
-    NVIC_SetPriority(irq, 3);
-    NVIC_EnableIRQ(irq);
+    _uart_driver->PSELTXD = _txPin;
+    _uart_driver->PSELRXD = _rxPin;
+    _uart_driver->CONFIG = (UART_CONFIG_PARITY_Excluded << UART_CONFIG_PARITY_Pos) | UART_CONFIG_HWFC_Disabled;
+    _uart_driver->BAUDRATE = BAUD;
+    _uart_driver->ENABLE = UART_ENABLE_ENABLE_Enabled;
+    _uart_driver->EVENTS_RXDRDY = 0x0UL;
+    _uart_driver->EVENTS_TXDRDY = 0x0UL;
+    _uart_driver->TASKS_STARTRX = 0x1UL;
+    _uart_driver->TASKS_STARTTX = 0x1UL;
+    _uart_driver->INTENSET = UART_INTENSET_RXDRDY_Msk;
+    
+    //todo enable IRQ
+    NVIC_ClearPendingIRQ(_irq);
+    NVIC_SetPriority(_irq, 3);
+    NVIC_EnableIRQ(_irq);
 }
 
 void Serial::putChar(const char c)
 {
-    uart_driver->TXD = c;
+    _uart_driver->TXD = c;
 
-    while(!uart_driver->EVENTS_TXDRDY);
+    while(!_uart_driver->EVENTS_TXDRDY);
 
-    uart_driver->EVENTS_TXDRDY = 0x0UL;
+    _uart_driver->EVENTS_TXDRDY = 0x0UL;
 }
 
 void Serial::write(const char* in, const unsigned int length)
@@ -69,12 +70,12 @@ void Serial::write(int32_t in)
     }
     else
     {
-        bool flag = false;
+        bool sign = false;
         char str[64] = { 0 }; 
         int16_t i = 62;
         if (in < 0) 
         {
-            flag = true;
+            sign = true;
             in = abs(in);
         }
 
@@ -84,7 +85,7 @@ void Serial::write(int32_t in)
             in /= 10;
         }
 
-        if (flag) str[i--] = '-';
+        if (sign) str[i--] = '-';
         write(str + i + 1, 64-(i+1));
     }
 }

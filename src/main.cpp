@@ -19,6 +19,8 @@ extern "C"
    
 }
 
+#include "serial.h"
+
 int main()
 {
     if(!nrf_drv_gpiote_is_init())nrf_drv_gpiote_init(); //initalize gpio driver
@@ -26,12 +28,15 @@ int main()
     pin30conf.init_state = NRF_GPIOTE_INITIAL_VALUE_HIGH;
     pin30conf.task_pin = false;
     
-    nrf_drv_gpiote_out_init(30, &pin30conf);
+    Serial serial;
+    
+    nrf_drv_gpiote_out_init(17, &pin30conf);
     
     while (1)
     {
-        nrf_drv_gpiote_out_toggle(30);
-        nrf_delay_ms(10);
+        serial.write("loop\n");
+        nrf_drv_gpiote_out_toggle(17);
+        nrf_delay_ms(100);
     }
     
     return 0;
