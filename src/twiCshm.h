@@ -1,4 +1,4 @@
-/*This Shim ist needed because nrf_drv_twi cannot be drectly used from c++ due to operator overloading.*/
+/*UVOS This Shim ist needed because nrf_drv_twi cannot be drectly used from c++ due to operator overloading.*/
 
 #pragma once
 
