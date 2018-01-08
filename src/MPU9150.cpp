@@ -65,7 +65,7 @@
 #define MPU9150_CMPS_ZOUT_H        0x4F   // R
 
 
-Mpu9150::Mpu9150(const uint8_t  address, const uint32_t sclPin, const uint32_t sdaPin): I2cDevice(address, sclPin, sdaPin)
+Mpu9150::Mpu9150(const uint8_t  address, const uint8_t compassAddress, const uint32_t sclPin, const uint32_t sdaPin): I2cDevice(address, sclPin, sdaPin), _compassAddress(compassAddress)
 {
     start();
     
@@ -103,8 +103,8 @@ Mpu9150::Mpu9150(const uint8_t  address, const uint32_t sclPin, const uint32_t s
 
 void Mpu9150::writeRegsiter( uint8_t address, uint8_t data )
 {
-    write(address, 1);
-    write(data, 1);
+    putChar(address, false);
+    putChar(data, true);
 }
 
 void Mpu9150::start()
@@ -117,17 +117,15 @@ void Mpu9150::stop()
     writeRegsiter(MPU9150_PWR_MGMT_1, 1); //put device to sleep
 }
 
-point3D <int16_t> Mpu9150::getAccelData()
+Point3D <int16_t> Mpu9150::getAccelData()
 {
-    point3D <int16_t> result;
+    Point3D <int16_t> result;
     
     result.x  = txRxSequence(MPU9150_ACCEL_XOUT_H) << 8;
     result.x += txRxSequence(MPU9150_ACCEL_XOUT_L);
-    MPU9150_CMPS_XOUT_L
     
     result.y  = txRxSequence(MPU9150_ACCEL_YOUT_H) << 8;
     result.y += txRxSequence(MPU9150_ACCEL_YOUT_L);
-    
     
     result.z  = txRxSequence(MPU9150_ACCEL_ZOUT_H) << 8;
     result.z += txRxSequence(MPU9150_ACCEL_ZOUT_L);
@@ -135,9 +133,9 @@ point3D <int16_t> Mpu9150::getAccelData()
     return result;
 }
 
-point3D <int16_t> Mpu9150::getMagnData()
+Point3D <int16_t> Mpu9150::getMagnData()
 {
-    point3D <int16_t> result;
+    Point3D <int16_t> result;
     
     result.x  = txRxSequence(MPU9150_CMPS_XOUT_H) << 8;
     result.x += txRxSequence(MPU9150_CMPS_XOUT_L);
@@ -153,7 +151,7 @@ point3D <int16_t> Mpu9150::getMagnData()
     return result;
 }
 
-int16_t Mpu9150::getTempareture()
+int16_t Mpu9150::getTemperature()
 {
    int16_t result = 0;
    

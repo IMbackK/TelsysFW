@@ -15,7 +15,7 @@ nRF5x_addTwi()
 nRF5x_addTwiDrvMaster()
 addSaadc()
 
-list(APPEND SOURCE_FILES src/main.cpp src/serial.cpp src/i2c.cpp src/adc.c)
+list(APPEND SOURCE_FILES src/main.cpp src/serial.cpp src/i2c.cpp src/adc.c src/MPU9150.cpp)
 
 
 nRF5x_addExecutable(${PROJECT_NAME} "${SOURCE_FILES}")

@@ -2,7 +2,7 @@
 #include "string.h"
 #include "twiCshm.h"
 
-I2cDevice::I2cDevice(const uint8_t  devAdress, const uint32_t sclPin, const uint32_t sdaPin): _devAdress(devAdress << 1), _sclPin(sclPin), _sdaPin(sdaPin)
+I2cDevice::I2cDevice(const uint8_t  devAdress, const uint32_t sclPin, const uint32_t sdaPin): _sclPin(sclPin), _sdaPin(sdaPin), _devAdress(devAdress << 1)
 {
     twiCshmInit(_sclPin, _sdaPin);
 }
@@ -40,7 +40,7 @@ void I2cDevice::txRxSequence( uint8_t* txBuffer, const unsigned int txLength, ui
 
 uint8_t I2cDevice::txRxSequence(uint8_t tx)
 {
-    write(tx, 1);
+    putChar(tx, true);
     uint8_t rx;
     read(&rx, 1);
     return rx;
