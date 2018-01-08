@@ -1,19 +1,16 @@
 #include "serial.h"
 
-char rxBuffer[BUFFER_SIZE];
-volatile uint32_t interruptIndex = 0;
+#include "ringbuffer.h"
 
-extern "C"
+RingBuffer rxBuffer<BUFFER_SIZE>;
+
+void UARTE0_UART0_IRQHandler()
 {
-    void UARTE0_UART0_IRQHandler()
-    {
-        if (NRF_UART0->EVENTS_RXDRDY)
-            {
-                rxBuffer[interruptIndex % BUFFER_SIZE] = NRF_UART0->RXD;
-                interruptIndex++;
-                NRF_UART0->EVENTS_RXDRDY = 0x0UL;
-            }
-    }
+    if (NRF_UART0->EVENTS_RXDRDY)
+        {
+            rxBuffer.write(NRF_UART0->RXD);
+            NRF_UART0->EVENTS_RXDRDY = 0x0UL;
+        }
 }
 
 
@@ -98,46 +95,22 @@ bool Serial::dataIsWaiting()
 
 char Serial::getChar()
 {
-    if( _rxIndex >= (32768) - 2*BUFFER_SIZE ) flush(); //may explode only occasionaly
     if(dataIsWaiting())
     {
         _rxIndex++;
-        return rxBuffer[(_rxIndex -1) % BUFFER_SIZE];
+        return rxBuffer.read();
     }
     else return '\0';
 }
 
 unsigned int Serial::getString(char* buffer, const int bufferLength)
 {
-    int i = 0;
-    for(; i <= (interruptIndex-_rxIndex) && i <= BUFFER_SIZE && rxBuffer[(_rxIndex+i) % BUFFER_SIZE] != _terminator; i++);
-    
-    if( i < (interruptIndex-_rxIndex) && i > 0)
-    {
-       int j = 0;
-       for(; j < i &&  j < bufferLength-1 ; j++)
-       {
-           buffer[j] = getChar();
-       }
-       buffer[j+1]='\0';
-       _rxIndex++;
-    }
-    else
-    {
-         i = 0;
-         if( _rxIndex >= (32768) - 2*BUFFER_SIZE ) flush();
-    }
-
-    if (rxBuffer[(_rxIndex+i) % BUFFER_SIZE] == _terminator) _rxIndex++;
-    
-    return i;
+    return rxBuffer.getString(_terminator, buffer, bufferLength);
 }
 
 void Serial::flush()
 {
-    _rxIndex = 0;
-    interruptIndex = 0;
-    for(int i = 0; i < BUFFER_SIZE; i++) rxBuffer[i] = ' ';
+    rxBuffer.flush();
 }
 
 void Serial::setTerminator(char terminator){_terminator = terminator;}
