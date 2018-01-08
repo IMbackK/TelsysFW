@@ -80,23 +80,30 @@ Mpu9150::Mpu9150(const uint8_t  address, const uint8_t compassAddress, const uin
 
     _devAdress = mpuAdress;      //change Address to MPU
 
-    writeRegsiter(0x24, 0x40); //Wait for Data at Slave0
-    writeRegsiter(0x25, 0x8C); //Set i2c address at slave0 at 0x0C
-    writeRegsiter(0x26, 0x02); //Set where reading at slave 0 starts
-    writeRegsiter(0x27, 0x88); //set offset at start reading and enable
-    writeRegsiter(0x28, _compassAddress); //set i2c address at slv1 at 0x0C
-    writeRegsiter(0x29, 0x0A); //Set where reading at slave 1 starts
-    writeRegsiter(0x2A, 0x81); //Enable at set length to 1
-    writeRegsiter(0x64, 0x01); //overvride register
-    writeRegsiter(0x67, 0x03); //set delay rate
+    
+    writeRegsiter(MPU9150_I2C_MST_CTRL, 0x40); //Wait for Data at Slave0
+    
+    //TO DO: figure out why we need to configure slave 0. What device is at 0x8C?
+    writeRegsiter(MPU9150_I2C_SLV0_ADDR, 0x8C); //Set i2c address at slave0 at 0x0C
+    writeRegsiter(MPU9150_I2C_SLV0_REG, 0x02); //Set where reading at slave 0 starts
+    writeRegsiter(MPU9150_I2C_SLV0_CTRL, 0x88); //set offset at start reading and enable
+    
+    //Configure compass as slave 1.
+    writeRegsiter(MPU9150_I2C_SLV1_ADDR, _compassAddress); //set i2c address at slv1 at 0x0C
+    writeRegsiter(MPU9150_I2C_SLV1_REG, 0x0A); //Set where reading at slave 1 starts
+    writeRegsiter(MPU9150_I2C_SLV1_CTRL, 0x81); //Enable at set length to 1
+    writeRegsiter(MPU9150_I2C_SLV1_DO, 0x01); //overvride register
+    writeRegsiter(MPU9150_I2C_MST_DELAY_CTRL, 0x03); //set delay rate
+    
+
     writeRegsiter(0x01, 0x80);
 
-    writeRegsiter(0x34, 0x04); //set i2c slv4 delay
-    writeRegsiter(0x64, 0x00); //override register
-    writeRegsiter(0x6A, 0x00); //clear usr setting
-    writeRegsiter(0x64, 0x01); //override register
-    writeRegsiter(0x6A, 0x20); //enable master i2c mode
-    writeRegsiter(0x34, 0x13); //disable slv4
+    writeRegsiter(MPU9150_I2C_SLV4_CTRL, 0x04); //set i2c slv4 delay. Why?
+    writeRegsiter(MPU9150_I2C_SLV1_DO, 0x00); //override register
+    writeRegsiter(MPU9150_USER_CTRL, 0x00); //clear usr setting
+    writeRegsiter(MPU9150_I2C_SLV1_DO, 0x01); //override register
+    writeRegsiter(MPU9150_USER_CTRL, 0x20); //enable master i2c mode
+    writeRegsiter(MPU9150_I2C_SLV4_CTRL, 0x13); //disable slv4. Why?
     
     //stop()
 }
