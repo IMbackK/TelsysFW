@@ -1888,7 +1888,7 @@
 // <e> SAADC_ENABLED - nrf_drv_saadc - SAADC peripheral driver
 //==========================================================
 #ifndef SAADC_ENABLED
-#define SAADC_ENABLED 0
+#define SAADC_ENABLED 1
 #endif
 #if  SAADC_ENABLED
 // <o> SAADC_CONFIG_RESOLUTION  - Resolution
@@ -1899,7 +1899,7 @@
 // <3=> 14 bit 
 
 #ifndef SAADC_CONFIG_RESOLUTION
-#define SAADC_CONFIG_RESOLUTION 1
+#define SAADC_CONFIG_RESOLUTION 0
 #endif
 
 // <o> SAADC_CONFIG_OVERSAMPLE  - Sample period
@@ -2448,17 +2448,17 @@
 // <e> TWIS_ENABLED - nrf_drv_twis - TWIS peripheral driver
 //==========================================================
 #ifndef TWIS_ENABLED
-#define TWIS_ENABLED 0
+#define TWIS_ENABLED 1
 #endif
 #if  TWIS_ENABLED
 // <o> TWIS_DEFAULT_CONFIG_ADDR0 - Address0 
 #ifndef TWIS_DEFAULT_CONFIG_ADDR0
-#define TWIS_DEFAULT_CONFIG_ADDR0 0
+#define TWIS_DEFAULT_CONFIG_ADDR0 1
 #endif
 
 // <o> TWIS_DEFAULT_CONFIG_ADDR1 - Address1 
 #ifndef TWIS_DEFAULT_CONFIG_ADDR1
-#define TWIS_DEFAULT_CONFIG_ADDR1 0
+#define TWIS_DEFAULT_CONFIG_ADDR1 1
 #endif
 
 // <o> TWIS_DEFAULT_CONFIG_SCL_PULL  - SCL pin pull configuration
@@ -2589,7 +2589,7 @@
 // <e> TWI_ENABLED - nrf_drv_twi - TWI/TWIM peripheral driver
 //==========================================================
 #ifndef TWI_ENABLED
-#define TWI_ENABLED 0
+#define TWI_ENABLED 1
 #endif
 #if  TWI_ENABLED
 // <o> TWI_DEFAULT_CONFIG_FREQUENCY  - Frequency
@@ -2636,7 +2636,7 @@
 // <e> TWI0_ENABLED - Enable TWI0 instance
 //==========================================================
 #ifndef TWI0_ENABLED
-#define TWI0_ENABLED 0
+#define TWI0_ENABLED 1
 #endif
 #if  TWI0_ENABLED
 // <q> TWI0_USE_EASY_DMA  - Use EasyDMA (if present)
@@ -3003,7 +3003,7 @@
  
 
 #ifndef APP_GPIOTE_ENABLED
-#define APP_GPIOTE_ENABLED 0
+#define APP_GPIOTE_ENABLED 1
 #endif
 
 // <q> APP_PWM_ENABLED  - app_pwm - PWM functionality

@@ -86,7 +86,7 @@ macro(nRF5x_setup)
     # compiler/assambler/linker flags
     set(CMAKE_C_FLAGS "${COMMON_FLAGS}")
     set(CMAKE_CXX_FLAGS "${COMMON_FLAGS} -std=c++11")
-    set(CMAKE_ASM_FLAGS "-MP -MD -std=c99 -x assembler-with-cpp")
+    set(CMAKE_ASM_FLAGS "-MP -MD -std=c11 -x assembler-with-cpp")
     set(CMAKE_EXE_LINKER_FLAGS "-mthumb -mabi=aapcs -std=c++11 -std=c99 -L ${NRF5_SDK_PATH}/components/toolchain/gcc -T${NRF5_LINKER_SCRIPT} ${CPU_FLAGS} -Wl,--gc-sections --specs=nano.specs -lc -lnosys -lm")
     # note: we must override the default cmake linker flags so that CMAKE_C_FLAGS are not added implicitly
     set(CMAKE_C_LINK_EXECUTABLE "${CMAKE_C_COMPILER} <LINK_FLAGS> <OBJECTS> -o <TARGET>")
@@ -100,10 +100,11 @@ macro(nRF5x_setup)
             "${NRF5_SDK_PATH}/components/boards"
             "${NRF5_SDK_PATH}/components/device"
             "${NRF5_SDK_PATH}/components/libraries/util"
-            "${NRF5_SDK_PATH}/components/drivers_nrf/hal"
+            "${NRF5_SDK_PATH}/components/drivers_nrf/make"
             "${NRF5_SDK_PATH}/components/drivers_nrf/common"
             "${NRF5_SDK_PATH}/components/drivers_nrf/delay"
             "${NRF5_SDK_PATH}/components/drivers_nrf/uart"
+            "${NRF5_SDK_PATH}/components/drivers_nrf/hal"
             "${NRF5_SDK_PATH}/components/drivers_nrf/clock"
             "${NRF5_SDK_PATH}/components/drivers_nrf/rtc"
             "${NRF5_SDK_PATH}/components/drivers_nrf/gpiote"
@@ -209,100 +210,49 @@ endmacro()
 
 # adds app-level scheduler library
 macro(nRF5x_addAppScheduler)
-    include_directories(
-            "${NRF5_SDK_PATH}/components/libraries/scheduler"
-    )
-
-    list(APPEND SDK_SOURCE_FILES
-            "${NRF5_SDK_PATH}/components/libraries/scheduler/app_scheduler.c"
-            "${NRF5_SDK_PATH}/components/softdevice/common/softdevice_handler/softdevice_handler_appsh.c"
-            )
-
+    include_directories("${NRF5_SDK_PATH}/components/libraries/scheduler")
+    list(APPEND SDK_SOURCE_FILES "${NRF5_SDK_PATH}/components/libraries/scheduler/app_scheduler.c" "${NRF5_SDK_PATH}/components/softdevice/common/softdevice_handler/softdevice_handler_appsh.c")
 endmacro(nRF5x_addAppScheduler)
 
 # adds app-level FIFO libraries
 macro(nRF5x_addAppFIFO)
-    include_directories(
-            "${NRF5_SDK_PATH}/components/libraries/fifo"
-    )
-
-    list(APPEND SDK_SOURCE_FILES
-            "${NRF5_SDK_PATH}/components/libraries/fifo/app_fifo.c"
-            )
-
+    include_directories("${NRF5_SDK_PATH}/components/libraries/fifo")
+    list(APPEND SDK_SOURCE_FILES "${NRF5_SDK_PATH}/components/libraries/fifo/app_fifo.c")
 endmacro(nRF5x_addAppFIFO)
 
 # adds app-level Timer libraries
 macro(nRF5x_addAppTimer)
-    list(APPEND SDK_SOURCE_FILES
-            "${NRF5_SDK_PATH}/components/libraries/timer/app_timer.c"
-            )
+    list(APPEND SDK_SOURCE_FILES "${NRF5_SDK_PATH}/components/libraries/timer/app_timer.c")
 endmacro(nRF5x_addAppTimer)
 
 # adds app-level UART libraries
 macro(nRF5x_addAppUART)
-    include_directories(
-            "${NRF5_SDK_PATH}/components/libraries/uart"
-    )
-
-    list(APPEND SDK_SOURCE_FILES
-            "${NRF5_SDK_PATH}/components/libraries/uart/app_uart_fifo.c"
-            )
-
+    include_directories("${NRF5_SDK_PATH}/components/libraries/uart")
+    list(APPEND SDK_SOURCE_FILES"${NRF5_SDK_PATH}/components/libraries/uart/app_uart_fifo.c")
 endmacro(nRF5x_addAppUART)
 
 # adds app-level Button library
 macro(nRF5x_addAppButton)
-    include_directories(
-            "${NRF5_SDK_PATH}/components/libraries/button"
-    )
-
-    list(APPEND SDK_SOURCE_FILES
-            "${NRF5_SDK_PATH}/components/libraries/button/app_button.c"
-            )
-
+    include_directories("${NRF5_SDK_PATH}/components/libraries/button")
+    list(APPEND SDK_SOURCE_FILES"${NRF5_SDK_PATH}/components/libraries/button/app_button.c")
 endmacro(nRF5x_addAppButton)
 
-# adds BSP (board support package) library
-macro(nRF5x_addBSP WITH_BLE_BTN WITH_ANT_BTN WITH_NFC)
-    include_directories(
-            "${NRF5_SDK_PATH}/components/libraries/bsp"
-    )
+# adds app-level TWI library
+macro(nRF5x_addTwi)
+    include_directories("${NRF5_SDK_PATH}/components/libraries/twi")
+    list(APPEND SDK_SOURCE_FILES "${NRF5_SDK_PATH}/components/libraries/twi/app_twi.c")
+endmacro(nRF5x_addTwi)
 
-    list(APPEND SDK_SOURCE_FILES
-            "${NRF5_SDK_PATH}/components/libraries/bsp/bsp.c"
-            )
-
-    if (${WITH_BLE_BTN})
-        list(APPEND SDK_SOURCE_FILES
-                "${NRF5_SDK_PATH}/components/libraries/bsp/bsp_btn_ble.c"
-                )
-    endif ()
-
-    if (${WITH_ANT_BTN})
-        list(APPEND SDK_SOURCE_FILES
-                "${NRF5_SDK_PATH}/components/libraries/bsp/bsp_btn_ant.c"
-                )
-    endif ()
-
-    if (${WITH_NFC})
-        list(APPEND SDK_SOURCE_FILES
-                "${NRF5_SDK_PATH}/components/libraries/bsp/bsp_nfc.c"
-                )
-    endif ()
-
-endmacro(nRF5x_addBSP)
+# adds twi master library
+macro(nRF5x_addTwiDrvMaster)
+    include_directories("${NRF5_SDK_PATH}/components/drivers_nrf/twi_master")
+    list(APPEND SDK_SOURCE_FILES "${NRF5_SDK_PATH}/components/drivers_nrf/twi_master/nrf_drv_twi.c")
+endmacro(nRF5x_addTwiDrvMaster)
 
 # adds Bluetooth Low Energy GATT support library
 macro(nRF5x_addBLEGATT)
-    include_directories(
-            "${NRF5_SDK_PATH}/components/ble/nrf_ble_gatt"
-    )
-
-    list(APPEND SDK_SOURCE_FILES
-            "${NRF5_SDK_PATH}/components/ble/nrf_ble_gatt/nrf_ble_gatt.c"
-            )
-
+    include_directories("${NRF5_SDK_PATH}/components/ble/nrf_ble_gatt")
+    list(APPEND SDK_SOURCE_FILES "${NRF5_SDK_PATH}/components/ble/nrf_ble_gatt/nrf_ble_gatt.c")
 endmacro(nRF5x_addBLEGATT)
 
 # adds Bluetooth Low Energy advertising support library
@@ -319,9 +269,7 @@ endmacro(nRF5x_addBLEAdvertising)
 
 # adds Bluetooth Low Energy advertising support library
 macro(nRF5x_addBLEPeerManager)
-    include_directories(
-            "${NRF5_SDK_PATH}/components/ble/peer_manager"
-    )
+    include_directories("${NRF5_SDK_PATH}/components/ble/peer_manager")
 
     list(APPEND SDK_SOURCE_FILES
             "${NRF5_SDK_PATH}/components/ble/peer_manager/gatt_cache_manager.c"
@@ -354,3 +302,13 @@ macro(nRF5x_addAppFDS)
             )
 
 endmacro(nRF5x_addAppFDS)
+
+macro(addAdc)
+    include_directories("${NRF5_SDK_PATH}/components/drivers_nrf/adc")
+    list(APPEND SDK_SOURCE_FILES "${NRF5_SDK_PATH}/components/drivers_nrf/adc/nrf_drv_adc.c")
+endmacro(addAdc)
+
+macro(addSaadc)
+    include_directories("${NRF5_SDK_PATH}/components/drivers_nrf/saadc")
+    list(APPEND SDK_SOURCE_FILES "${NRF5_SDK_PATH}/components/drivers_nrf/saadc/nrf_drv_saadc.c")
+endmacro(addSaadc)

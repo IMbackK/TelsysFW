@@ -20,6 +20,8 @@ extern "C"
 }
 
 #include "serial.h"
+#include "adc.h"
+#include "point3D.h"
 
 int main()
 {
@@ -28,16 +30,19 @@ int main()
     pin30conf.init_state = NRF_GPIOTE_INITIAL_VALUE_HIGH;
     pin30conf.task_pin = false;
     
-    APP_TIMER_INIT(0, APP_TIMER_OP_QUEUE_SIZE, false); //start timer with 0 preescaler and que size 4.
-    
+    //APP_TIMER_INIT(0, APP_TIMER_OP_QUEUE_SIZE, false); //start timer with 0 preescaler and que size 4.
     
     Serial serial;
+    
+    
     
     nrf_drv_gpiote_out_init(17, &pin30conf);
     
     while (1)
     {
-        serial.write("loop\n");
+        serial.write("adc val: ");
+        serial.write(getAdcValue());
+        serial.putChar('\n');
         nrf_drv_gpiote_out_toggle(17);
         nrf_delay_ms(100);
     }

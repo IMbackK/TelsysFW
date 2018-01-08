@@ -11,8 +11,11 @@ include("CMake_nRF5x.cmake")
 
 nRF5x_setup()
 nRF5x_addAppUART()
+nRF5x_addTwi()
+nRF5x_addTwiDrvMaster()
+addSaadc()
 
-list(APPEND SOURCE_FILES src/main.cpp src/serial.cpp)
+list(APPEND SOURCE_FILES src/main.cpp src/serial.cpp src/i2c.cpp src/adc.c)
 
 
 nRF5x_addExecutable(${PROJECT_NAME} "${SOURCE_FILES}")
