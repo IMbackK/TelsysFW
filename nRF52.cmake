@@ -13,18 +13,7 @@ if (NOT OPENOCD)
     message(FATAL_ERROR "The path to the openocd utility (OPENOCD) must be set.")
 endif ()
 
-# check if the nRF target has been set
-if (NRF_TARGET MATCHES "nrf51")
-
-elseif (NRF_TARGET MATCHES "nrf52")
-
-elseif (NOT NRF_TARGET)
-    message(FATAL_ERROR "nRF target must be defined")
-else ()
-    message(FATAL_ERROR "Only nRF51 and rRF52 boards are supported right now")
-endif ()
-
-macro(nRF5x_setup)
+macro(nRF52_setup)
     # fix on macOS: prevent cmake from adding implicit parameters to Xcode
     set(CMAKE_OSX_SYSROOT "/")
     set(CMAKE_OSX_DEPLOYMENT_TARGET "")
@@ -38,48 +27,26 @@ macro(nRF5x_setup)
     set(CMAKE_CXX_COMPILER "${ARM_NONE_EABI_TOOLCHAIN_PATH}/arm-none-eabi-c++")
     set(CMAKE_ASM_COMPILER "${ARM_NONE_EABI_TOOLCHAIN_PATH}/arm-none-eabi-gcc")
 
-    include_directories(
-            "${NRF5_SDK_PATH}/components/softdevice/common/softdevice_handler"
-    )
+    include_directories("${NRF5_SDK_PATH}/components/softdevice/common/softdevice_handler")
 
-    list(APPEND SDK_SOURCE_FILES
-            "${NRF5_SDK_PATH}/components/softdevice/common/softdevice_handler/softdevice_handler.c"
-            )
+    list(APPEND SDK_SOURCE_FILES "${NRF5_SDK_PATH}/components/softdevice/common/softdevice_handler/softdevice_handler.c")
 
     # CPU specyfic settings
-    if (NRF_TARGET MATCHES "nrf51")
-        # nRF51 (nRF51-DK => PCA10028)
+    # nRF52 (nRF52-DK => PCA10040)
 
-        set(NRF5_LINKER_SCRIPT "${CMAKE_SOURCE_DIR}/ld/gcc_nrf51.ld")
-        set(CPU_FLAGS "-mcpu=cortex-m0 -mfloat-abi=soft")
-        add_definitions(-DBOARD_PCA10028 -DNRF51 -DNRF51422)
-        add_definitions(-DSOFTDEVICE_PRESENT -DS130 -DNRF_SD_BLE_API_VERSION=2 -DSWI_DISABLE0 -DBLE_STACK_SUPPORT_REQD)
-        include_directories(
-                "${NRF5_SDK_PATH}/components/softdevice/s130/headers"
-                "${NRF5_SDK_PATH}/components/softdevice/s130/headers/nrf51"
-        )
-        list(APPEND SDK_SOURCE_FILES
-                "${NRF5_SDK_PATH}/components/toolchain/system_nrf51.c"
-                "${NRF5_SDK_PATH}/components/toolchain/gcc/gcc_startup_nrf51.S"
-                )
-        set(SOFTDEVICE_PATH "${NRF5_SDK_PATH}/components/softdevice/s130/hex/s130_nrf51_2.0.1_softdevice.hex")
-    elseif (NRF_TARGET MATCHES "nrf52")
-        # nRF52 (nRF52-DK => PCA10040)
-
-        set(NRF5_LINKER_SCRIPT "${CMAKE_SOURCE_DIR}/ld/gcc_nrf52.ld")
-        set(CPU_FLAGS "-mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16")
-        add_definitions(-DNRF52 -DNRF52832 -DNRF52_PAN_64 -DNRF52_PAN_12 -DNRF52_PAN_58 -DNRF52_PAN_54 -DNRF52_PAN_31 -DNRF52_PAN_51 -DNRF52_PAN_36 -DNRF52_PAN_15 -DNRF52_PAN_20 -DNRF52_PAN_55 -DBOARD_PCA10040)
-        add_definitions(-DSOFTDEVICE_PRESENT -DS132 -DBLE_STACK_SUPPORT_REQD -DNRF_SD_BLE_API_VERSION=3)
-        include_directories(
-                "${NRF5_SDK_PATH}/components/softdevice/s132/headers"
-                "${NRF5_SDK_PATH}/components/softdevice/s132/headers/nrf52"
-        )
-        list(APPEND SDK_SOURCE_FILES
-                "${NRF5_SDK_PATH}/components/toolchain/system_nrf52.c"
-                "${NRF5_SDK_PATH}/components/toolchain/gcc/gcc_startup_nrf52.S"
-                )
-        set(SOFTDEVICE_PATH "${NRF5_SDK_PATH}/components/softdevice/s132/hex/s132_nrf52_3.0.0_softdevice.hex")
-    endif ()
+    set(NRF5_LINKER_SCRIPT "${CMAKE_SOURCE_DIR}/ld/gcc_nrf52.ld")
+    set(CPU_FLAGS "-mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16")
+    add_definitions(-DNRF52 -DNRF52832 -DNRF52_PAN_64 -DNRF52_PAN_12 -DNRF52_PAN_58 -DNRF52_PAN_54 -DNRF52_PAN_31 -DNRF52_PAN_51 -DNRF52_PAN_36 -DNRF52_PAN_15 -DNRF52_PAN_20 -DNRF52_PAN_55 -DBOARD_PCA10040)
+    add_definitions(-DSOFTDEVICE_PRESENT -DS132 -DBLE_STACK_SUPPORT_REQD -DNRF_SD_BLE_API_VERSION=3)
+    include_directories(
+            "${NRF5_SDK_PATH}/components/softdevice/s132/headers"
+            "${NRF5_SDK_PATH}/components/softdevice/s132/headers/nrf52"
+    )
+    list(APPEND SDK_SOURCE_FILES
+            "${NRF5_SDK_PATH}/components/toolchain/system_nrf52.c"
+            "${NRF5_SDK_PATH}/components/toolchain/gcc/gcc_startup_nrf52.S"
+            )
+    set(SOFTDEVICE_PATH "${NRF5_SDK_PATH}/components/softdevice/s132/hex/s132_nrf52_3.0.0_softdevice.hex")
 
     set(COMMON_FLAGS "-MP -MD -mthumb -mabi=aapcs -Wall -Os -g3 -ffunction-sections -fdata-sections -fno-strict-aliasing -fno-builtin --short-enums ${CPU_FLAGS}")
 
@@ -110,7 +77,7 @@ macro(nRF5x_setup)
             "${NRF5_SDK_PATH}/components/drivers_nrf/gpiote"
     )
 
-    # toolchain specyfic
+    # gcc toolchain specyfic
     include_directories(
             "${NRF5_SDK_PATH}/components/toolchain/"
             "${NRF5_SDK_PATH}/components/toolchain/gcc"
@@ -183,10 +150,10 @@ macro(nRF5x_setup)
             COMMAND ${OPENOCD} -f interface/stlink-v2.cfg -f target/nrf52.cfg -c init -c "reset init" -c halt -c "nrf5 mass_erase" -c reset -c exit
             COMMENT "erasing flash"
             )
-endmacro(nRF5x_setup)
+endmacro(nRF52_setup)
 
 # adds a target for comiling and flashing an executable
-macro(nRF5x_addExecutable EXECUTABLE_NAME SOURCE_FILES)
+macro(nRF52_addExecutable EXECUTABLE_NAME SOURCE_FILES)
     # executable
     add_executable(${EXECUTABLE_NAME} ${SDK_SOURCE_FILES} ${SOURCE_FILES})
     set_target_properties(${EXECUTABLE_NAME} PROPERTIES SUFFIX ".out")
@@ -209,54 +176,54 @@ macro(nRF5x_addExecutable EXECUTABLE_NAME SOURCE_FILES)
 endmacro()
 
 # adds app-level scheduler library
-macro(nRF5x_addAppScheduler)
+macro(nRF52_addAppScheduler)
     include_directories("${NRF5_SDK_PATH}/components/libraries/scheduler")
     list(APPEND SDK_SOURCE_FILES "${NRF5_SDK_PATH}/components/libraries/scheduler/app_scheduler.c" "${NRF5_SDK_PATH}/components/softdevice/common/softdevice_handler/softdevice_handler_appsh.c")
-endmacro(nRF5x_addAppScheduler)
+endmacro(nRF52_addAppScheduler)
 
 # adds app-level FIFO libraries
-macro(nRF5x_addAppFIFO)
+macro(nRF52_addAppFIFO)
     include_directories("${NRF5_SDK_PATH}/components/libraries/fifo")
     list(APPEND SDK_SOURCE_FILES "${NRF5_SDK_PATH}/components/libraries/fifo/app_fifo.c")
-endmacro(nRF5x_addAppFIFO)
+endmacro(nRF52_addAppFIFO)
 
 # adds app-level Timer libraries
-macro(nRF5x_addAppTimer)
+macro(nRF52_addAppTimer)
     list(APPEND SDK_SOURCE_FILES "${NRF5_SDK_PATH}/components/libraries/timer/app_timer.c")
-endmacro(nRF5x_addAppTimer)
+endmacro(nRF52_addAppTimer)
 
 # adds app-level UART libraries
-macro(nRF5x_addAppUART)
+macro(nRF52_addAppUART)
     include_directories("${NRF5_SDK_PATH}/components/libraries/uart")
     list(APPEND SDK_SOURCE_FILES"${NRF5_SDK_PATH}/components/libraries/uart/app_uart_fifo.c")
-endmacro(nRF5x_addAppUART)
+endmacro(nRF52_addAppUART)
 
 # adds app-level Button library
-macro(nRF5x_addAppButton)
+macro(nRF52_addAppButton)
     include_directories("${NRF5_SDK_PATH}/components/libraries/button")
     list(APPEND SDK_SOURCE_FILES"${NRF5_SDK_PATH}/components/libraries/button/app_button.c")
-endmacro(nRF5x_addAppButton)
+endmacro(nRF52_addAppButton)
 
 # adds app-level TWI library
-macro(nRF5x_addTwi)
+macro(nRF52_addTwi)
     include_directories("${NRF5_SDK_PATH}/components/libraries/twi")
     list(APPEND SDK_SOURCE_FILES "${NRF5_SDK_PATH}/components/libraries/twi/app_twi.c")
-endmacro(nRF5x_addTwi)
+endmacro(nRF52_addTwi)
 
 # adds twi master library
-macro(nRF5x_addTwiDrvMaster)
+macro(nRF52_addTwiDrvMaster)
     include_directories("${NRF5_SDK_PATH}/components/drivers_nrf/twi_master")
     list(APPEND SDK_SOURCE_FILES "${NRF5_SDK_PATH}/components/drivers_nrf/twi_master/nrf_drv_twi.c")
-endmacro(nRF5x_addTwiDrvMaster)
+endmacro(nRF52_addTwiDrvMaster)
 
 # adds Bluetooth Low Energy GATT support library
-macro(nRF5x_addBLEGATT)
+macro(nRF52_addBLEGATT)
     include_directories("${NRF5_SDK_PATH}/components/ble/nrf_ble_gatt")
     list(APPEND SDK_SOURCE_FILES "${NRF5_SDK_PATH}/components/ble/nrf_ble_gatt/nrf_ble_gatt.c")
-endmacro(nRF5x_addBLEGATT)
+endmacro(nRF52_addBLEGATT)
 
 # adds Bluetooth Low Energy advertising support library
-macro(nRF5x_addBLEAdvertising)
+macro(nRF52_addBLEAdvertising)
     include_directories(
             "${NRF5_SDK_PATH}/components/ble/ble_advertising"
     )
@@ -265,10 +232,10 @@ macro(nRF5x_addBLEAdvertising)
             "${NRF5_SDK_PATH}/components/ble/ble_advertising/ble_advertising.c"
             )
 
-endmacro(nRF5x_addBLEAdvertising)
+endmacro(nRF52_addBLEAdvertising)
 
 # adds Bluetooth Low Energy advertising support library
-macro(nRF5x_addBLEPeerManager)
+macro(nRF52_addBLEPeerManager)
     include_directories("${NRF5_SDK_PATH}/components/ble/peer_manager")
 
     list(APPEND SDK_SOURCE_FILES
@@ -286,10 +253,10 @@ macro(nRF5x_addBLEPeerManager)
             "${NRF5_SDK_PATH}/components/ble/peer_manager/security_manager.c"
             )
 
-endmacro(nRF5x_addBLEPeerManager)
+endmacro(nRF52_addBLEPeerManager)
 
 # adds app-level FDS (flash data storage) library
-macro(nRF5x_addAppFDS)
+macro(nRF52_addAppFDS)
     include_directories(
             "${NRF5_SDK_PATH}/components/libraries/fds"
             "${NRF5_SDK_PATH}/components/libraries/fstorage"
@@ -301,7 +268,7 @@ macro(nRF5x_addAppFDS)
             "${NRF5_SDK_PATH}/components/libraries/fstorage/fstorage.c"
             )
 
-endmacro(nRF5x_addAppFDS)
+endmacro(nRF52_addAppFDS)
 
 macro(addAdc)
     include_directories("${NRF5_SDK_PATH}/components/drivers_nrf/adc")
