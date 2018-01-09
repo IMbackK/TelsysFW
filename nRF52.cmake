@@ -14,15 +14,11 @@ if (NOT OPENOCD)
 endif ()
 
 macro(nRF52_setup)
-    # fix on macOS: prevent cmake from adding implicit parameters to Xcode
-    set(CMAKE_OSX_SYSROOT "/")
-    set(CMAKE_OSX_DEPLOYMENT_TARGET "")
 
-    # language standard/version settings
     set(CMAKE_C_STANDARD 99)
     set(CMAKE_CXX_STANDARD 98)
 
-    # configure cmake to use the arm-none-eabi-gcc
+    #use arm-none-eabi-gcc
     set(CMAKE_C_COMPILER "${ARM_NONE_EABI_TOOLCHAIN_PATH}/arm-none-eabi-gcc")
     set(CMAKE_CXX_COMPILER "${ARM_NONE_EABI_TOOLCHAIN_PATH}/arm-none-eabi-c++")
     set(CMAKE_ASM_COMPILER "${ARM_NONE_EABI_TOOLCHAIN_PATH}/arm-none-eabi-gcc")
@@ -30,9 +26,6 @@ macro(nRF52_setup)
     include_directories("${NRF5_SDK_PATH}/components/softdevice/common/softdevice_handler")
 
     list(APPEND SDK_SOURCE_FILES "${NRF5_SDK_PATH}/components/softdevice/common/softdevice_handler/softdevice_handler.c")
-
-    # CPU specyfic settings
-    # nRF52 (nRF52-DK => PCA10040)
 
     set(NRF5_LINKER_SCRIPT "${CMAKE_SOURCE_DIR}/ld/gcc_nrf52.ld")
     set(CPU_FLAGS "-mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16")
@@ -255,6 +248,37 @@ macro(nRF52_addBLEPeerManager)
 
 endmacro(nRF52_addBLEPeerManager)
 
+macro(nRF52_addBLElbs)
+    include_directories("${NRF5_SDK_PATH}/components/ble/ble_services/ble_lbs")
+
+    list(APPEND SDK_SOURCE_FILES
+            "${NRF5_SDK_PATH}/components/ble/ble_services/ble_lbs/ble_lbs.c"
+
+            )
+
+endmacro(nRF52_addBLElbs)
+
+#bluetooth serial service
+macro(nRF52_addBLEnus)
+    include_directories("${NRF5_SDK_PATH}/components/ble/ble_services/ble_nus")
+
+    list(APPEND SDK_SOURCE_FILES
+            "${NRF5_SDK_PATH}/components/ble/ble_services/ble_nus/ble_nus.c"
+
+            )
+
+endmacro(nRF52_addBLEnus)
+
+macro(nRF52_addBsp)
+    include_directories("${NRF5_SDK_PATH}/components/libraries/bsp/")
+
+    list(APPEND SDK_SOURCE_FILES
+            "${NRF5_SDK_PATH}/components/libraries/bsp/bsp.c"
+
+            )
+
+endmacro(nRF52_addBsp)
+
 # adds app-level FDS (flash data storage) library
 macro(nRF52_addAppFDS)
     include_directories(
@@ -270,12 +294,7 @@ macro(nRF52_addAppFDS)
 
 endmacro(nRF52_addAppFDS)
 
-macro(addAdc)
-    include_directories("${NRF5_SDK_PATH}/components/drivers_nrf/adc")
-    list(APPEND SDK_SOURCE_FILES "${NRF5_SDK_PATH}/components/drivers_nrf/adc/nrf_drv_adc.c")
-endmacro(addAdc)
-
-macro(addSaadc)
+macro(nRF52_addSaadc)
     include_directories("${NRF5_SDK_PATH}/components/drivers_nrf/saadc")
     list(APPEND SDK_SOURCE_FILES "${NRF5_SDK_PATH}/components/drivers_nrf/saadc/nrf_drv_saadc.c")
-endmacro(addSaadc)
+endmacro(nRF52_addSaadc)

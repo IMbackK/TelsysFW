@@ -2,7 +2,7 @@
 
 #include "ringbuffer.h"
 
-RingBuffer rxBuffer<BUFFER_SIZE>;
+RingBuffer<UART_BUFFER_SIZE> rxBuffer;
 
 void UARTE0_UART0_IRQHandler()
 {
@@ -90,7 +90,7 @@ void Serial::write(int32_t in)
 
 bool Serial::dataIsWaiting()
 {
-    return (interruptIndex > _rxIndex);
+    return !rxBuffer.isEmpty();
 }
 
 char Serial::getChar()

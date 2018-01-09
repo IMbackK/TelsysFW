@@ -1,17 +1,15 @@
 #ifndef SERIAL_H
 #define SERIAL_H
 
-#define BAUD UART_BAUDRATE_BAUDRATE_Baud115200
-#define BUFFER_SIZE 128
-#define DEFAULT_RX_PIN 8
-#define DEFAULT_TX_PIN 6
-
-
 #include <string.h>
 #include <stdlib.h>
 #include "app_uart.h"
 #include "nrf.h"
 
+#define BAUD UART_BAUDRATE_BAUDRATE_Baud115200
+#define UART_BUFFER_SIZE 128
+#define DEFAULT_RX_PIN 8
+#define DEFAULT_TX_PIN 6
 
 class Serial
 {

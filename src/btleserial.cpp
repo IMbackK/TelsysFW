@@ -5,7 +5,7 @@
 //sdk includes
 extern "C"
 {
-    #include "nordic_common.h"
+   /* #include "nordic_common.h"
     #include "nrf.h"
     #include "boards.h"
     #include "app_error.h"
@@ -15,13 +15,22 @@ extern "C"
     #include "ble_advdata.h"
     #include "ble_conn_params.h"
     #include "ble_conn_state.h"
-    #include "nrf_sdh.h"
-    #include "nrf_sdh_ble.h"
+    //#include "nrf_sdh.h"
+    //#include "nrf_sdh_ble.h"
     #include "app_timer.h"
     #include "ble_lbs.h"
-    #include "nrf_ble_gatt.h"
+    #include "nrf_ble_gatt.h"*/
 }
 
+//clock source for SoftDevice
+#define NRF_CLOCK_LFCLKSRC      {.source        = NRF_CLOCK_LF_SRC_XTAL,            \
+                                 .rc_ctiv       = 0,                                \
+                                 .rc_temp_ctiv  = 0,                                \
+                                 .xtal_accuracy = NRF_CLOCK_LF_XTAL_ACCURACY_20_PPM}
+
+
+//these defines where lifted from the NORDIC SDK NRF UART BTLE example.
+#define NUS_SERVICE_UUID_TYPE           BLE_UUID_TYPE_VENDOR_BEGIN 
 #define DEVICE_NAME                     "beaconName"                         /**< Name of device. Will be included in the advertising data. */
 
 #define APP_BLE_CONN_CFG_TAG            1                                       /**< A tag identifying the SoftDevice BLE configuration. */
@@ -30,16 +39,25 @@ extern "C"
 #define APP_ADV_INTERVAL                MSEC_TO_UNITS(100, UNIT_0_625_MS)        /**< The advertising interval (in units of 0.625 ms; this value corresponds to 40 ms). */
 #define APP_ADV_TIMEOUT_IN_SECONDS      BLE_GAP_ADV_TIMEOUT_GENERAL_UNLIMITED   /**< The advertising time-out (in units of seconds). When set to 0, we will never time out. */
 
+#define APP_TIMER_PRESCALER             0                                           /**< Value of the RTC1 PRESCALER register. */
+#define APP_TIMER_OP_QUEUE_SIZE         4                                           /**< Size of timer operation queues. */
+
 #define MIN_CONN_INTERVAL               MSEC_TO_UNITS(100, UNIT_1_25_MS)        /**< Minimum acceptable connection interval (0.5 seconds). */
 #define MAX_CONN_INTERVAL               MSEC_TO_UNITS(200, UNIT_1_25_MS)        /**< Maximum acceptable connection interval (1 second). */
 #define SLAVE_LATENCY                   0                                       /**< Slave latency. */
 #define CONN_SUP_TIMEOUT                MSEC_TO_UNITS(4000, UNIT_10_MS)         /**< Connection supervisory time-out (4 seconds). */
 
-#define FIRST_CONN_PARAMS_UPDATE_DELAY  APP_TIMER_TICKS(20000)                  /**< Time from initiating event (connect or start of notification) to first time sd_ble_gap_conn_param_update is called (15 seconds). */
-#define NEXT_CONN_PARAMS_UPDATE_DELAY   APP_TIMER_TICKS(5000)                   /**< Time between each call to sd_ble_gap_conn_param_update after the first call (5 seconds). */
+#define FIRST_CONN_PARAMS_UPDATE_DELAY APP_TIMER_TICKS(15000, APP_TIMER_PRESCALER)                  /**< Time from initiating event (connect or start of notification) to first time sd_ble_gap_conn_param_update is called (15 seconds). */
+#define NEXT_CONN_PARAMS_UPDATE_DELAY    APP_TIMER_TICKS(30000, APP_TIMER_PRESCALER)                  /**< Time between each call to sd_ble_gap_conn_param_update after the first call (5 seconds). */
 #define MAX_CONN_PARAMS_UPDATE_COUNT    3                                       /**< Number of attempts before giving up the connection parameter negotiation. */
 
 #define APP_FEATURE_NOT_SUPPORTED       BLE_GATT_STATUS_ATTERR_APP_BEGIN + 2    /**< Reply when unsupported features are requested. */
+
+
+#define CENTRAL_LINK_COUNT              0                                           /**< Number of central links used by the application. When changing this number remember to adjust the RAM settings*/
+#define PERIPHERAL_LINK_COUNT           1
+
+#define NRF_BLE_MAX_MTU_SIZE            GATT_MTU_SIZE_DEFAULT 
 
 /**@brief   Priority of the application BLE event handler.
  * @note    You shouldn't need to modify this value.
@@ -52,17 +70,18 @@ static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;
 
 static ble_uuid_t                       m_adv_uuids[] = {{BLE_UUID_NUS_SERVICE, NUS_SERVICE_UUID_TYPE}};
 
-BLE_LBS_DEF(m_lbs);                                                             //LED Button Service instance. (Why do we need this?)
-NRF_BLE_GATT_DEF(m_gatt);                                                       //GATT module instance.
+//BLE_LBS_DEF(m_lbs);                                                             //LED Button Service instance. (Why do we need this?)
+//NRF_BLE_GATT_DEF(m_gatt);                                                       //GATT module instance.
 
 RingBuffer<128> ringBuffer; //Bluetooth ring buffer.
 
 BtleUart::BtleUart()
 {
-    app_timer_init();
+    APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, false);
     _bleStackInit();
+    ble_conn_state_init();
     _gapParamsInit();
-    nrf_ble_gatt_init(&m_gatt, NULL);
+    //nrf_ble_gatt_init(&m_gatt, NULL);
     _servicesInit();
     _advertisingInit();
     _connectionParamatersInit();
@@ -81,11 +100,38 @@ void BtleUart::start()
     adv_params.interval    = APP_ADV_INTERVAL;
     adv_params.timeout     = APP_ADV_TIMEOUT_IN_SECONDS;
 
-    err_code = sd_ble_gap_adv_start(&adv_params, APP_BLE_CONN_CFG_TAG);
+    sd_ble_gap_adv_start(&adv_params);
 }
 
 void BtleUart::_bleStackInit()
 {
+     uint32_t err_code;
+
+    nrf_clock_lf_cfg_t clock_lf_cfg = NRF_CLOCK_LFCLKSRC;
+
+    // Initialize SoftDevice.
+    SOFTDEVICE_HANDLER_INIT(&clock_lf_cfg, NULL);
+
+    ble_enable_params_t ble_enable_params;
+    err_code = softdevice_enable_get_default_config(CENTRAL_LINK_COUNT,
+                                                    PERIPHERAL_LINK_COUNT,
+                                                    &ble_enable_params);
+    APP_ERROR_CHECK(err_code);
+
+    //Check the ram settings against the used number of links
+    CHECK_RAM_START_ADDR(CENTRAL_LINK_COUNT,PERIPHERAL_LINK_COUNT);
+
+    // Enable BLE stack.
+#if (NRF_SD_BLE_API_VERSION == 3)
+    ble_enable_params.gatt_enable_params.att_mtu = NRF_BLE_MAX_MTU_SIZE;
+#endif
+    err_code = softdevice_enable(&ble_enable_params);
+    APP_ERROR_CHECK(err_code);
+
+    // Subscribe for BLE events.
+    err_code = softdevice_ble_evt_handler_set(_btleEventHandler);
+    APP_ERROR_CHECK(err_code);
+    /*
   nrf_sdh_enable_request();
 
   // Configure the BLE stack using the default settings.
@@ -98,6 +144,7 @@ void BtleUart::_bleStackInit()
 
   // Register a handler for BLE events.
   NRF_SDH_BLE_OBSERVER(m_ble_observer, APP_BLE_OBSERVER_PRIO, _btleEventHandler, NULL);
+  */
 }
 
 
@@ -157,7 +204,7 @@ void BtleUart::_advertisingInit()
     ble_advertising_init(&advdata, &scanrsp, &options, NULL, NULL);
 }
 
-static void BtleUart:_connParamsEvtHandler(ble_conn_params_evt_t * event)
+void BtleUart::_connParamsEvtHandler(ble_conn_params_evt_t * event)
 {
     if (event->evt_type == BLE_CONN_PARAMS_EVT_FAILED) sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_CONN_INTERVAL_UNACCEPTABLE);
 }
@@ -175,33 +222,33 @@ void BtleUart::_connectionParamatersInit()
     cp_init.max_conn_params_update_count   = MAX_CONN_PARAMS_UPDATE_COUNT;
     cp_init.start_on_notify_cccd_handle    = BLE_GATT_HANDLE_INVALID;
     cp_init.disconnect_on_fail             = false;
-    cp_init.evt_handler                    = on_conn_params_evt;
-    cp_init.error_handler                  = conn_params_error_handler;
+    cp_init.evt_handler                    = _connParamsEvtHandler;
+    cp_init.error_handler                  = _connParamsErrorHandler;
 
-    err_code = ble_conn_params_init(&cp_init);
+    ble_conn_params_init(&cp_init);
 }
 
 void BtleUart::_connected(const ble_gap_evt_t * const p_gap_evt)
 {
   uint32_t    periph_link_cnt = ble_conn_state_n_peripherals(); // Number of peripheral links.
 
-  if (periph_link_cnt == NRF_SDH_BLE_PERIPHERAL_LINK_COUNT)
+  if (periph_link_cnt == PERIPHERAL_LINK_COUNT)
   {
   }
   else
   {
     // Continue advertising. More connections can be established because the maximum link count has not been reached.
-    start();
+    BtleUart::start();
   }
 }
 
 void BtleUart::_disconnected(ble_gap_evt_t const * const p_gap_evt)
 {
   uint32_t    periph_link_cnt = ble_conn_state_n_peripherals(); // Number of peripheral links.
-  if (periph_link_cnt == (NRF_SDH_BLE_PERIPHERAL_LINK_COUNT - 1))
+  if (periph_link_cnt == (PERIPHERAL_LINK_COUNT - 1))
   {
     // Advertising is not running when all connections are taken, and must therefore be started.
-    start();
+    BtleUart::start();
   }
 }
 
@@ -238,11 +285,15 @@ void BtleUart::_onAuthorizeRequest(ble_evt_t const * p_ble_evt)
 /**@brief Function for handling BLE events.
  *
  * @param[in]   p_ble_evt   Bluetooth stack event.
- * @param[in]   p_context   Unused.
+ * 
  */
-void BtleUart::_btleEventHandler(ble_evt_t const * p_ble_evt, void * p_context)
+void BtleUart::_btleEventHandler(ble_evt_t * p_ble_evt)
 {
   ret_code_t err_code;
+  
+  ble_conn_params_on_ble_evt(p_ble_evt);
+  ble_nus_on_ble_evt(&m_nus, p_ble_evt);
+  ble_advertising_on_ble_evt(p_ble_evt);
 
   switch (p_ble_evt->header.evt_id)
   {
@@ -262,17 +313,7 @@ void BtleUart::_btleEventHandler(ble_evt_t const * p_ble_evt, void * p_context)
           NULL);
       APP_ERROR_CHECK(err_code);
       break;
-
-#if defined(S132)
-    case BLE_GAP_EVT_PHY_UPDATE_REQUEST:
-      {
-        NRF_LOG_DEBUG("PHY update request.");
-        ble_gap_phys_t const phys = { BLE_GAP_PHY_AUTO, BLE_GAP_PHY_AUTO };
-        err_code = sd_ble_gap_phy_update(p_ble_evt->evt.gap_evt.conn_handle, &phys);
-        APP_ERROR_CHECK(err_code);
-      } break;
-#endif
-
+      
     case BLE_GATTS_EVT_SYS_ATTR_MISSING:
       // No system attributes have been stored.
       err_code = sd_ble_gatts_sys_attr_set(p_ble_evt->evt.gap_evt.conn_handle, NULL, 0, 0);
@@ -281,7 +322,6 @@ void BtleUart::_btleEventHandler(ble_evt_t const * p_ble_evt, void * p_context)
 
     case BLE_GATTC_EVT_TIMEOUT:
       // Disconnect on GATT Client timeout event.
-      NRF_LOG_DEBUG("GATT Client Timeout.");
       err_code = sd_ble_gap_disconnect(p_ble_evt->evt.gattc_evt.conn_handle,
           BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
       APP_ERROR_CHECK(err_code);
@@ -289,7 +329,6 @@ void BtleUart::_btleEventHandler(ble_evt_t const * p_ble_evt, void * p_context)
 
     case BLE_GATTS_EVT_TIMEOUT:
       // Disconnect on GATT Server timeout event.
-      NRF_LOG_DEBUG("GATT Server Timeout.");
       err_code = sd_ble_gap_disconnect(p_ble_evt->evt.gatts_evt.conn_handle,
           BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
       APP_ERROR_CHECK(err_code);
@@ -309,9 +348,9 @@ void BtleUart::_btleEventHandler(ble_evt_t const * p_ble_evt, void * p_context)
   }
 }
 
-bool BtleUart::write(uint8_t* buffer, uint16_t length)
+bool BtleUart::write(uint8_t* buffer, uint32_t length)
 {
-    if( length =< BLE_NUS_MAX_DATA_LEN )
+    if( length <= BLE_NUS_MAX_DATA_LEN )
     {
         ble_nus_string_send(&m_nus, buffer, length);
         return true;

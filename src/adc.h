@@ -6,9 +6,9 @@
 extern "C" {
 #endif
 
-bool adcInit();
+bool adcInit(void);
 
-int32_t getAdcValue();
+int32_t getAdcValue(void);
 
 
 #ifdef __cplusplus

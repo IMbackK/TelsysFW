@@ -13,9 +13,15 @@ nRF52_setup()
 nRF52_addAppUART()
 nRF52_addTwi()
 nRF52_addTwiDrvMaster()
-addSaadc()
+nRF52_addBLEGATT()
+nRF52_addBLEAdvertising()
+nRF52_addBLElbs()
+nRF52_addBLEnus()
+nRF52_addSaadc()
+nRF52_addAppFDS()
+#nRF52_addBsp()
 
-list(APPEND SOURCE_FILES src/main.cpp src/serial.cpp src/i2c.cpp src/adc.c src/MPU9150.cpp)
+list(APPEND SOURCE_FILES src/main.cpp src/serial.cpp src/i2c.cpp src/adc.c src/MPU9150.cpp src/btleserial.cpp )
 
 
 nRF52_addExecutable(${PROJECT_NAME} "${SOURCE_FILES}")

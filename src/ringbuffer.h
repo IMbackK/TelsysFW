@@ -62,14 +62,14 @@ public:
         for(int i = 0; i < BUFFER_SIZE; i++) _buffer[i] = ' ';
     }
     
-    unsigned int getString(uint8_t terminator, char* buffer, const int bufferLength)
+    unsigned int getString(uint8_t terminator, char* buffer, const unsigned int bufferLength)
     {
-        int i = 0;
+        unsigned int i = 0;
         for(; i <= (_headIndex-_tailIndex) && i <= BUFFER_SIZE && _buffer[(_tailIndex+i) % BUFFER_SIZE] != terminator; i++);
         
         if( i < (_headIndex-_tailIndex) && i > 0)
         {
-            int j = 0;
+            unsigned int j = 0;
             for(; j < i && j < bufferLength-1 ; j++)
             {
                 buffer[j] = read();
