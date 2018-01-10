@@ -3,8 +3,8 @@
 #include <stdint.h>
 
 
-#define DEFAULT_SCL_PIN      27
-#define DEFAULT_SDA_PIN      26
+#define DEFAULT_SCL_PIN      26
+#define DEFAULT_SDA_PIN      25
 #define BUFFER_SIZE 128
 
 class I2cDevice
@@ -14,7 +14,7 @@ protected:
     const uint32_t _sclPin;
     const uint32_t _sdaPin;
     
-    uint8_t _devAdress; //Warn: nrf52 only supports 7bit addressing
+    uint8_t _devAdress; 
     
     uint32_t _rxIndex=0;
     

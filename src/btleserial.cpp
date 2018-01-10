@@ -358,6 +358,11 @@ bool BtleUart::write(uint8_t* buffer, uint32_t length)
     else return false;
 }
 
+bool BtleUart::isConnected()
+{
+    return ble_conn_state_n_peripherals() > 0;
+}
+
 void BtleUart::_btleDataHandler(ble_nus_t* p_nus, uint8_t* data, uint16_t length)
 {
     ringBuffer.write(data, length);

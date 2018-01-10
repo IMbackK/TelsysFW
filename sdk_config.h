@@ -44,6 +44,8 @@
 #define PEER_MANAGER_ENABLED 0
 #endif
 
+#define APP_FIFO_ENABLED 1
+
 // </h> 
 //==========================================================
 
@@ -1885,6 +1887,7 @@
 #endif //RTC_ENABLED
 // </e>
 
+
 // <e> SAADC_ENABLED - nrf_drv_saadc - SAADC peripheral driver
 //==========================================================
 #ifndef SAADC_ENABLED
@@ -1899,7 +1902,7 @@
 // <3=> 14 bit 
 
 #ifndef SAADC_CONFIG_RESOLUTION
-#define SAADC_CONFIG_RESOLUTION 0
+#define SAADC_CONFIG_RESOLUTION 1
 #endif
 
 // <o> SAADC_CONFIG_OVERSAMPLE  - Sample period
@@ -1915,7 +1918,7 @@
 // <8=> 256x 
 
 #ifndef SAADC_CONFIG_OVERSAMPLE
-#define SAADC_CONFIG_OVERSAMPLE 0
+#define SAADC_CONFIG_OVERSAMPLE 2
 #endif
 
 // <q> SAADC_CONFIG_LP_MODE  - Enabling low power mode
@@ -3072,7 +3075,7 @@
 // <e> APP_UART_ENABLED - app_uart - UART driver
 //==========================================================
 #ifndef APP_UART_ENABLED
-#define APP_UART_ENABLED 0
+#define APP_UART_ENABLED 1
 #endif
 #if  APP_UART_ENABLED
 // <o> APP_UART_DRIVER_INSTANCE  - UART instance used

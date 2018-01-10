@@ -46,4 +46,5 @@ public:
     static void start();
     bool dataIsWaiting();
     bool write( uint8_t* buffer, uint32_t length);
+    bool isConnected();
 };

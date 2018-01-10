@@ -45,13 +45,13 @@ macro(nRF52_setup)
 
     # compiler/assambler/linker flags
     set(CMAKE_C_FLAGS "${COMMON_FLAGS}")
-    set(CMAKE_CXX_FLAGS "${COMMON_FLAGS} -std=c++11")
-    set(CMAKE_ASM_FLAGS "-MP -MD -std=c11 -x assembler-with-cpp")
+    set(CMAKE_CXX_FLAGS "${COMMON_FLAGS} -std=c++11") #todo: why ist -std=c++11 overriden?
+    message( "g++ flags: ${CMAKE_CXX_FLAGS}" )
+    set(CMAKE_ASM_FLAGS "-MP -MD -std=c11 -x assembler-with-cpp")  
     set(CMAKE_EXE_LINKER_FLAGS "-mthumb -mabi=aapcs -std=c++11 -std=c99 -L ${NRF5_SDK_PATH}/components/toolchain/gcc -T${NRF5_LINKER_SCRIPT} ${CPU_FLAGS} -Wl,--gc-sections --specs=nano.specs -lc -lnosys -lm")
-    # note: we must override the default cmake linker flags so that CMAKE_C_FLAGS are not added implicitly
+    #Override the default flags so that CMAKE_C_FLAGS are not added automaticlly.
     set(CMAKE_C_LINK_EXECUTABLE "${CMAKE_C_COMPILER} <LINK_FLAGS> <OBJECTS> -o <TARGET>")
     set(CMAKE_CXX_LINK_EXECUTABLE "${CMAKE_C_COMPILER} <LINK_FLAGS> <OBJECTS> -lstdc++ -o <TARGET>")
-    message( "${CMAKE_C_COMPILER} <LINK_FLAGS> <OBJECTS> -o <TARGET>")
 
     include_directories(".")
 
@@ -296,5 +296,6 @@ endmacro(nRF52_addAppFDS)
 
 macro(nRF52_addSaadc)
     include_directories("${NRF5_SDK_PATH}/components/drivers_nrf/saadc")
-    list(APPEND SDK_SOURCE_FILES "${NRF5_SDK_PATH}/components/drivers_nrf/saadc/nrf_drv_saadc.c")
+    list(APPEND SDK_SOURCE_FILES "${NRF5_SDK_PATH}/components/drivers_nrf/saadc/nrf_drv_saadc.c"
+                                 "${NRF5_SDK_PATH}/components/drivers_nrf/hal/nrf_saadc.c")
 endmacro(nRF52_addSaadc)

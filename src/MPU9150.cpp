@@ -72,7 +72,7 @@ Mpu9150::Mpu9150(const uint8_t  address, const uint8_t compassAddress, const uin
     uint8_t mpuAdress = _devAdress;
     _devAdress = _compassAddress << 1;      //change Address to Compass
     
-    //Subdevice init sequence taken from datasheet
+    //Subdevice init sequence taken from arduino driver
 
     writeRegsiter(0x0A, 0x00); //PowerDownMode
     writeRegsiter(0x0A, 0x0F); //SelfTest
@@ -105,13 +105,13 @@ Mpu9150::Mpu9150(const uint8_t  address, const uint8_t compassAddress, const uin
     writeRegsiter(MPU9150_USER_CTRL, 0x20); //enable master i2c mode
     writeRegsiter(MPU9150_I2C_SLV4_CTRL, 0x13); //disable slv4. Why?
     
-    //stop()
+    stop();
 }
 
 void Mpu9150::writeRegsiter( uint8_t address, uint8_t data )
 {
-    putChar(address, false);
-    putChar(data, true);
+    uint8_t registerSeq[2] = {address, data};
+    write(registerSeq, 2, true);
 }
 
 void Mpu9150::start()
@@ -144,21 +144,21 @@ Point3D <int16_t> Mpu9150::getMagnData()
 {
     Point3D <int16_t> result;
     
-    result.x  = txRxSequence(MPU9150_CMPS_XOUT_H) << 8;
-    result.x += txRxSequence(MPU9150_CMPS_XOUT_L);
+    result.x  = txRxSequence(MPU9150_GYRO_XOUT_H) << 8;
+    result.x += txRxSequence(MPU9150_GYRO_XOUT_L);
     
     
-    result.y  = txRxSequence(MPU9150_CMPS_YOUT_H) << 8;
-    result.y += txRxSequence(MPU9150_CMPS_YOUT_L);
+    result.y  = txRxSequence(MPU9150_GYRO_YOUT_H) << 8;
+    result.y += txRxSequence(MPU9150_GYRO_YOUT_L);
     
     
-    result.z  = txRxSequence(MPU9150_CMPS_ZOUT_H) << 8;
-    result.z += txRxSequence(MPU9150_CMPS_ZOUT_L);
+    result.z  = txRxSequence(MPU9150_GYRO_ZOUT_H) << 8;
+    result.z += txRxSequence(MPU9150_GYRO_ZOUT_L);
     
     return result;
 }
 
-int16_t Mpu9150::getTemperature()
+int16_t Mpu9150::getTemperature() //todo: fix this 
 {
    int16_t result = 0;
    

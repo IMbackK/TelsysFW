@@ -21,7 +21,7 @@ nRF52_addSaadc()
 nRF52_addAppFDS()
 #nRF52_addBsp()
 
-list(APPEND SOURCE_FILES src/main.cpp src/serial.cpp src/i2c.cpp src/adc.c src/MPU9150.cpp src/btleserial.cpp )
+list(APPEND SOURCE_FILES src/main.cpp src/serial.cpp src/i2c.cpp src/adc.c src/twiCshm.c src/MPU9150.cpp src/btleserial.cpp )
 
 
 nRF52_addExecutable(${PROJECT_NAME} "${SOURCE_FILES}")
