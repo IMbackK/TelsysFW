@@ -1,3 +1,20 @@
+/*UVOS*/
+
+/* This file is part of TelemetrySystem.
+ *
+ * TelemetrySystem is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License (LGPL) version 3 as published by
+ * the Free Software Foundation.
+ *
+ * TelemetrySystem is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with TelemetrySystem.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 extern "C"
 {
     #define __STATIC_INLINE static inline
@@ -30,18 +47,14 @@ extern "C"
 
 int main()
 {
-    if(!nrf_drv_gpiote_is_init())nrf_drv_gpiote_init(); //initalize gpio driver
+    if(!nrf_drv_gpiote_is_init())nrf_drv_gpiote_init();
     nrf_drv_gpiote_out_config_t pin30conf;
     pin30conf.init_state = NRF_GPIOTE_INITIAL_VALUE_LOW;
     pin30conf.task_pin = false;
     
     nrf_drv_gpiote_out_init(17, &pin30conf);
-    
-    //APP_TIMER_INIT(0, APP_TIMER_OP_QUEUE_SIZE, false); //start timer with 0 preescaler and que size 4.
-    
-    
+
     Serial serial;
-    
     
     serial.write("adc init \n");
     bool adcSucsess = adcInit();
@@ -51,14 +64,6 @@ int main()
     serial.putChar('\n');
     
     serial.write("mpu init \n");
-    //twiCshmInit(27,30);
-    /*uint8_t powerOnSeq[2] = {0x6B, 0};
-    twiCshm_drv_twi_tx(0x68, powerOnSeq, 2, true );
-    
-    uint8_t tmpChar = 0x3B;
-    twiCshm_drv_twi_tx(0x68, &tmpChar, 1, false );
-    twiCshm_drv_twi_rx(0x68, &tmpChar, 1);*/
-    //twiCshm_drv_twi_tx(0x68, NULL, 0, true );
     Mpu9150 mpu;
     mpu.start();
     
