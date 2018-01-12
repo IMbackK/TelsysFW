@@ -15,6 +15,9 @@
  * along with TelemetrySystem.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#define APP_TIMER_PRESCALER             0    //Value of the RTC1 PRESCALER register.
+#define APP_TIMER_OP_QUEUE_SIZE         5    //Size of timer operation queues.
+
 extern "C"
 {
     #define __STATIC_INLINE static inline
@@ -22,7 +25,7 @@ extern "C"
     //Standard libraries
     #include <stdint.h>
     #include <stddef.h>
-
+    #include <string.h>
 
     //SDK headers
     #include "nrf.h"
@@ -41,20 +44,48 @@ extern "C"
 #include "point3D.h"
 #include "twiCshm.h"
 #include "MPU9150.h"
-#include <string.h>
+#include "btleserial.h"
 
+extern "C" void noophandler(void* param)
+{
+}
 
+inline uint16_t ticksToUs(uint32_t ticks)
+{
+    return ticks*((APP_TIMER_PRESCALER+1)*100000) / APP_TIMER_CLOCK_FREQ;
+}
 
 int main()
 {
-    if(!nrf_drv_gpiote_is_init())nrf_drv_gpiote_init();
-    nrf_drv_gpiote_out_config_t pin30conf;
-    pin30conf.init_state = NRF_GPIOTE_INITIAL_VALUE_LOW;
-    pin30conf.task_pin = false;
+    APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, false);
     
-    nrf_drv_gpiote_out_init(17, &pin30conf);
+
+    
+    if(!nrf_drv_gpiote_is_init())nrf_drv_gpiote_init();
+    nrf_drv_gpiote_out_config_t pinconf;
+    pinconf.init_state = NRF_GPIOTE_INITIAL_VALUE_LOW;
+    pinconf.task_pin = false;
+    
+    nrf_drv_gpiote_out_init(17, &pinconf);
+    nrf_drv_gpiote_out_init(7, &pinconf);
+    
+     nrf_drv_gpiote_out_toggle(17);
+     nrf_delay_ms(500);
+     nrf_drv_gpiote_out_toggle(17);
+     nrf_delay_ms(500);
 
     Serial serial;
+    serial.write("\n -------------- Telemetrysystem Starting -------- \n");
+    
+    serial.write("btleSeral init \n");
+    BtleSerial btle(&serial);
+    serial.write("btleSeral start \n");
+    btle.start();
+    
+     nrf_drv_gpiote_out_toggle(17);
+     nrf_delay_ms(500);
+     nrf_drv_gpiote_out_toggle(17);
+     nrf_delay_ms(500);
     
     serial.write("adc init \n");
     bool adcSucsess = adcInit();
@@ -63,44 +94,110 @@ int main()
     adcSucsess ? serial.write("true") : serial.write("false");
     serial.putChar('\n');
     
+     nrf_drv_gpiote_out_toggle(17);
+     nrf_delay_ms(500);
+     nrf_drv_gpiote_out_toggle(17);
+     nrf_delay_ms(500);
+    
     serial.write("mpu init \n");
     Mpu9150 mpu;
     mpu.start();
     
     serial.write("going to loop \n");
     
+    serial.putChar('\n');
+    
+    //needet to start RTC1
+    APP_TIMER_DEF(dummyTimer); 
+    app_timer_create(&dummyTimer, APP_TIMER_MODE_REPEATED, noophandler);
+    serial.write("timer start return: ");
+    serial.write(app_timer_start(dummyTimer, 1000, NULL));
+    serial.putChar('\n');
+    
+    uint32_t previousTicks = app_timer_cnt_get();
+    
     while (1)
     {
+        uint32_t current = app_timer_cnt_get();
+        uint32_t delta;
+        app_timer_cnt_diff_compute(current, previousTicks, &delta);
+        previousTicks = current;
+        delta = ticksToUs(delta);
+        
+        volatile uint16_t adcValue = getAdcValue();
+        volatile Point3D <int16_t> accel = mpu.getAccelData();
+        volatile Point3D <int16_t> magn = mpu.getMagnData();
+       
+        volatile int16_t temperature = mpu.getTemperature();
+        
+        serial.write("Sample Time Delta: ");
+        serial.write(delta);
+        serial.write("us\n");
+        
         serial.write("ADC value: ");
-        serial.write(getAdcValue());
+        
+        serial.write(adcValue);
         serial.putChar('\n');
         
-        Point3D <int16_t> temp = mpu.getAccelData();
         serial.write("Accel vector: x = ");
-        serial.write(temp.x);
+        serial.write(accel.x);
         serial.write(" y = ");
-        serial.write(temp.y);
+        serial.write(accel.y);
         serial.write(" z = ");
-        serial.write(temp.z);
+        serial.write(accel.z);
+        serial.putChar('\n');
+
+        serial.write("Magnetic vector: x = ");
+        serial.write(magn.x);
+        serial.write(" y = ");
+        serial.write(magn.y);
+        serial.write(" z = ");
+        serial.write(magn.z);
         serial.putChar('\n');
         
-        temp = mpu.getMagnData();
-        serial.write("Magnetic vector: x = ");
-        serial.write(temp.x);
-        serial.write(" y = ");
-        serial.write(temp.y);
-        serial.write(" z = ");
-        serial.write(temp.z);
-        serial.putChar('\n');
         
         serial.write("temperature: ");
-        serial.write(mpu.getTemperature());
+        serial.write(temperature);
         serial.write("c\n");
         
+        if(btle.isConnected()) 
+        {
+            
+            btle.write("Sample Time Delta: ");
+            btle.write(delta);
+        
+            btle.write("ADC value: ");
+            btle.write(adcValue);
+            btle.putChar('\n');
+        
+            btle.write("Accel vector: x = ");
+            btle.write(accel.x);
+            btle.write(" y = ");
+            btle.write(accel.y);
+            btle.write(" z = ");
+            btle.write(accel.z);
+            btle.putChar('\n');
+            
+            btle.write("Magnetic vector: x = ");
+            btle.write(magn.x);
+            btle.write(" y = ");
+            btle.write(magn.y);
+            btle.write(" z = ");
+            btle.write(magn.z);
+            btle.putChar('\n');
+            
+            
+            btle.write("temperature: ");
+            btle.write(temperature);
+            btle.write("c\n");
+            
+        }
+        else serial.write("not connected.\n");
         serial.putChar('\n');
         
         nrf_drv_gpiote_out_toggle(17);
-        nrf_delay_ms(500);
+        nrf_drv_gpiote_out_toggle(7);
+        //nrf_delay_ms(1);
     }
     
     return 0;
