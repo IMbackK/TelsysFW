@@ -137,7 +137,7 @@ void Mpu9150::start()
 
 void Mpu9150::stop()
 {
-    writeRegsiter(MPU9150_PWR_MGMT_1, 1); //put device to sleep
+    writeRegsiter(MPU9150_PWR_MGMT_1, 0b01000000); //put device to sleep
 }
 
 Point3D <int16_t> Mpu9150::getAccelData()
@@ -174,12 +174,14 @@ Point3D <int16_t> Mpu9150::getMagnData()
     return result;
 }
 
-int16_t Mpu9150::getTemperature() //todo: fix this 
+int16_t Mpu9150::getTemperature()
 {
    int16_t result = 0;
    
    result  = txRxSequence(MPU9150_TEMP_OUT_H) << 8;
    result += txRxSequence(MPU9150_TEMP_OUT_L);
+   
+   result = result/340 + 35; //convert device internal units to celsius
    
    return result;
 }
