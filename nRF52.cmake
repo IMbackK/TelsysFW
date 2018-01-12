@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.6)
 
-# check if all the necessary toolchain SDK and tools paths have been provided.
+#Check if all the necessary toolchain SDK and tools paths have been provided.
 if (NOT ARM_NONE_EABI_TOOLCHAIN_PATH)
     message(FATAL_ERROR "The path to the arm-none-eabi-gcc toolchain (ARM_NONE_EABI_TOOLCHAIN_PATH) must be set.")
 endif ()
@@ -29,7 +29,9 @@ macro(nRF52_setup)
 
     set(NRF5_LINKER_SCRIPT "${CMAKE_SOURCE_DIR}/ld/gcc_nrf52.ld")
     set(CPU_FLAGS "-mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16")
-    add_definitions(-DNRF52 -DNRF52832 -DNRF52_PAN_64 -DNRF52_PAN_12 -DNRF52_PAN_58 -DNRF52_PAN_54 -DNRF52_PAN_31 -DNRF52_PAN_51 -DNRF52_PAN_36 -DNRF52_PAN_15 -DNRF52_PAN_20 -DNRF52_PAN_55 -DBOARD_PCA10040)
+    add_definitions(-DNRF52 -DNRF52832 -DNRF52_PAN_64 -DNRF52_PAN_12 -DNRF52_PAN_58 -DNRF52_PAN_54 -DNRF52_PAN_31 -DNRF52_PAN_51 -DNRF52_PAN_36 -DNRF52_PAN_15 -DNRF52_PAN_20 -DNRF52_PAN_55 -DBOARD_PCA10040) #todo: write own board specifier.
+    
+    #Specify softdevice to use.
     add_definitions(-DSOFTDEVICE_PRESENT -DS132 -DBLE_STACK_SUPPORT_REQD -DNRF_SD_BLE_API_VERSION=3)
     include_directories(
             "${NRF5_SDK_PATH}/components/softdevice/s132/headers"
@@ -55,7 +57,7 @@ macro(nRF52_setup)
 
     include_directories(".")
 
-    # basic board definitions and drivers
+    #Basic board definitions and drivers
     include_directories(
             "${NRF5_SDK_PATH}/components/boards"
             "${NRF5_SDK_PATH}/components/device"
@@ -94,7 +96,6 @@ macro(nRF52_setup)
             "${NRF5_SDK_PATH}/components/boards/boards.c"
             "${NRF5_SDK_PATH}/components/drivers_nrf/common/nrf_drv_common.c"
             "${NRF5_SDK_PATH}/components/drivers_nrf/clock/nrf_drv_clock.c"
-            #"${NRF5_SDK_PATH}/components/drivers_nrf/uart/nrf_drv_uart.c"
             "${NRF5_SDK_PATH}/components/drivers_nrf/rtc/nrf_drv_rtc.c"
             "${NRF5_SDK_PATH}/components/drivers_nrf/gpiote/nrf_drv_gpiote.c"
             )
@@ -134,12 +135,12 @@ macro(nRF52_setup)
             )
 
     # adds target for erasing and flashing the board with a softdevice
-    add_custom_target(FLASH_SOFTDEVICE
+    add_custom_target(softdevice
             COMMAND ${OPENOCD} -f interface/stlink-v2.cfg -f target/nrf52.cfg -c init -c "reset init" -c halt -c "program ${SOFTDEVICE_PATH} verify" -c reset -c exit
             COMMENT "flashing SoftDevice"
             )
 
-    add_custom_target(FLASH_ERASE
+    add_custom_target(erase
             COMMAND ${OPENOCD} -f interface/stlink-v2.cfg -f target/nrf52.cfg -c init -c "reset init" -c halt -c "nrf5 mass_erase" -c reset -c exit
             COMMENT "erasing flash"
             )
@@ -147,7 +148,6 @@ endmacro(nRF52_setup)
 
 # adds a target for comiling and flashing an executable
 macro(nRF52_addExecutable EXECUTABLE_NAME SOURCE_FILES)
-    # executable
     add_executable(${EXECUTABLE_NAME} ${SDK_SOURCE_FILES} ${SOURCE_FILES})
     set_target_properties(${EXECUTABLE_NAME} PROPERTIES SUFFIX ".out")
     set_target_properties(${EXECUTABLE_NAME} PROPERTIES LINK_FLAGS "-Wl,-Map=${EXECUTABLE_NAME}.map")
@@ -161,7 +161,7 @@ macro(nRF52_addExecutable EXECUTABLE_NAME SOURCE_FILES)
             COMMENT "post build steps for ${EXECUTABLE_NAME}")
 
     # custom target for flashing the board
-    add_custom_target("FLASH_${EXECUTABLE_NAME}" ALL
+    add_custom_target("flash" ALL
             COMMAND ${OPENOCD} -f interface/stlink-v2.cfg -f target/nrf52.cfg -c init -c "reset init" -c halt -c "program ${EXECUTABLE_NAME}.hex verify" -c reset -c exit
             DEPENDS ${EXECUTABLE_NAME}
             COMMENT "flashing ${EXECUTABLE_NAME}.hex"
@@ -190,6 +190,12 @@ macro(nRF52_addAppUART)
     include_directories("${NRF5_SDK_PATH}/components/libraries/uart")
     list(APPEND SDK_SOURCE_FILES"${NRF5_SDK_PATH}/components/libraries/uart/app_uart_fifo.c")
 endmacro(nRF52_addAppUART)
+
+# adds nordic UART driver
+macro(nRF52_addDrvUART) 
+    list(APPEND SDK_SOURCE_FILES"${NRF5_SDK_PATH}/components/drivers_nrf/uart/nrf_drv_uart.c")
+endmacro(nRF52_addAppUART)
+
 
 # adds app-level Button library
 macro(nRF52_addAppButton)
