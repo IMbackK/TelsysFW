@@ -32,7 +32,6 @@ class Serial
 {
 private:
     char _terminator = '\n';
-    uint16_t _rxIndex=0;
     
     IRQn_Type _irq;
     
@@ -45,7 +44,7 @@ public:
     void putChar(const char c);
     void write(const char* in, const unsigned int length);
     void write(const char in[]);
-    void write(const int32_t in);
+    void write(int32_t in);
     bool dataIsWaiting();
     char getChar();
     unsigned int getString(char* buffer, const int bufferLength);

@@ -114,7 +114,6 @@ char Serial::getChar()
 {
     if(dataIsWaiting())
     {
-        _rxIndex++;
         return rxBuffer.read();
     }
     else return '\0';
