@@ -81,7 +81,7 @@
 #define MPU9150_CMPS_ZOUT_H        0x4F   // R
 
 
-Mpu9150::Mpu9150(const uint8_t  address, const uint8_t compassAddress, const uint32_t sclPin, const uint32_t sdaPin): I2cDevice(address, sclPin, sdaPin), _compassAddress(compassAddress)
+Mpu9150::Mpu9150(const uint8_t  address, const uint8_t compassAddress): I2cDevice(address), _compassAddress(compassAddress)
 {
     start();
     

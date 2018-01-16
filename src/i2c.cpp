@@ -20,9 +20,9 @@
 #include "twiCshm.h"
 #include "app_error.h"
 
-I2cDevice::I2cDevice(const uint8_t  devAdress, const uint32_t sclPin, const uint32_t sdaPin): _sclPin(sclPin), _sdaPin(sdaPin), _devAdress(devAdress)
+I2cDevice::I2cDevice(const uint8_t  devAdress): _devAdress(devAdress)
 {
-    twiCshmInit(_sclPin, _sdaPin);
+  
 }
 
 I2cDevice::~I2cDevice()

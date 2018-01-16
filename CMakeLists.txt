@@ -22,7 +22,9 @@ nRF52_addAppFDS()
 nRF52_addAppTimer()
 nRF52_addAppFDS()
 
-list(APPEND SOURCE_FILES src/main.cpp src/serial.cpp src/i2c.cpp src/adc.c src/twiCshm.c src/MPU9150.cpp src/btleserial.cpp )
+add_definitions(-DBOARD_REDBEAR)
+
+list(APPEND SOURCE_FILES src/main.cpp src/serial.cpp src/i2c.cpp src/adc.c src/twiCshm.c src/MPU9150.cpp src/btleserial.cpp src/MCP4725.cpp )
 
 
 nRF52_addExecutable(${PROJECT_NAME} "${SOURCE_FILES}")

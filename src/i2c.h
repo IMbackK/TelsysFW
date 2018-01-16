@@ -18,25 +18,20 @@
 #pragma once
 
 #include <stdint.h>
+#include "board.h"
 
-
-#define DEFAULT_SCL_PIN      26
-#define DEFAULT_SDA_PIN      25
 #define BUFFER_SIZE 128
 
 class I2cDevice
 {
 protected:
     
-    const uint32_t _sclPin;
-    const uint32_t _sdaPin;
-    
     uint8_t _devAdress; 
     
     uint32_t _rxIndex=0;
     
 public:
-    I2cDevice(const uint8_t _devAdress, const uint32_t sclPin = DEFAULT_SCL_PIN, const uint32_t sdaPin = DEFAULT_SDA_PIN);
+    I2cDevice(const uint8_t devAdress);
     ~I2cDevice();
     
     void putChar(const uint8_t ch, const bool stop = false);

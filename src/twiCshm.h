@@ -26,7 +26,7 @@ extern "C" {
 
 extern bool twiCshm_rxFinished;
 
-void twiCshmInit(uint32_t sclPin, uint32_t sdaPin);
+void twiCshmInit(const uint32_t sclPin, const uint32_t sdaPin);
 
 void twiCshmDisable(void);
 
