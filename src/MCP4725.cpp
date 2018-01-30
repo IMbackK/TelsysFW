@@ -32,7 +32,7 @@ void Mcp4725::setValue(const uint16_t value)
 
 void Mcp4725::setStartupValue(const uint16_t value, bool powerOff)
 {
-    uint16_t packet = ((value & 0x00FF) << 8) + ((value & 0b0000111100000000) >> 8) + ((powerOff ? 0b1111000000000000 : 0b1100000000000000) >> 8 );
+    uint16_t packet = ((value & 0x00FF) << 8) + ((value & 0b0000111100000000) >> 8) + (powerOff ? 0b1111000000000000 >> 8 : 0b1100000000000000 >> 8);
     write( (uint8_t*)&packet, 2, true );
     setValue(_value);
 }

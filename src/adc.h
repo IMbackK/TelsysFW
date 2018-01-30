@@ -8,6 +8,8 @@ extern "C" {
 
 bool adcInit(void);
 
+int32_t adcCreateAsyncTask(void (*callbackFunction)(int16_t* buffer, uint16_t length ));
+
 int32_t getAdcValue(void);
 
 

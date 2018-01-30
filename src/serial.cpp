@@ -19,7 +19,7 @@
 
 #include "ringbuffer.h"
 
-RingBuffer<UART_BUFFER_SIZE> rxBuffer;
+static RingBuffer<UART_BUFFER_SIZE> rxBuffer;
 
 void UARTE0_UART0_IRQHandler()
 {

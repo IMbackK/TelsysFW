@@ -19,7 +19,7 @@
 
 #include "i2c.h"
 
-#define DEFAULT_MCP4725_ADRESS 0b01100010
+#define DEFAULT_MCP4725_ADRESS 0b01100011
 
 class Mcp4725 : private I2cDevice
 {

@@ -22,11 +22,10 @@
 #include <stdlib.h>
 #include "app_uart.h"
 #include "nrf.h"
+#include "board.h"
 
 #define BAUD UART_BAUDRATE_BAUDRATE_Baud115200
 #define UART_BUFFER_SIZE 128
-#define DEFAULT_RX_PIN 8
-#define DEFAULT_TX_PIN 6
 
 class Serial
 {

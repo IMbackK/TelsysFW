@@ -41,21 +41,12 @@ extern "C"
     #include "nrf_ble_gatt.h"*/
 }
 
-//clock source for SoftDevice
-#define NRF_CLOCK_LFCLKSRC      {.source        = NRF_CLOCK_LF_SRC_XTAL,            \
-                                 .rc_ctiv       = 0,                                \
-                                 .rc_temp_ctiv  = 0,                                \
-                                 .xtal_accuracy = NRF_CLOCK_LF_XTAL_ACCURACY_20_PPM}
 
 //these defines where lifted from the NORDIC SDK NRF UART BTLE example.
 
-#define APP_TIMER_PRESCALER             0 
-
 #define IS_SRVC_CHANGED_CHARACT_PRESENT 0                                           /**< Include the service_changed characteristic. If not enabled, the server's database cannot be changed for the lifetime of the device. */
 
-#if (NRF_SD_BLE_API_VERSION == 3)
 #define NRF_BLE_MAX_MTU_SIZE            GATT_MTU_SIZE_DEFAULT                       /**< MTU size used in the softdevice enabling and to reply to a BLE_GATTS_EVT_EXCHANGE_MTU_REQUEST event. */
-#endif
 
 #define APP_FEATURE_NOT_SUPPORTED       BLE_GATT_STATUS_ATTERR_APP_BEGIN + 2        /**< Reply when unsupported features are requested. */
 
@@ -89,10 +80,8 @@ static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;
 
 static ble_uuid_t                       m_adv_uuids[] = {{BLE_UUID_NUS_SERVICE, NUS_SERVICE_UUID_TYPE}};
 
-//BLE_LBS_DEF(m_lbs);                                                             //LED Button Service instance. (Why do we need this?)
-//NRF_BLE_GATT_DEF(m_gatt);                                                       //GATT module instance.
 
-RingBuffer<128> ringBuffer; //Bluetooth ring buffer.
+static RingBuffer<128> ringBuffer; //Bluetooth ring buffer.
 
 BtleSerial::BtleSerial(Serial* serial): _serial(serial)
 {
@@ -102,7 +91,7 @@ BtleSerial::BtleSerial(Serial* serial): _serial(serial)
     _bleStackInit();
     serial->write(" gap init\n");
     _gapParamsInit();
-    //nrf_ble_gatt_init(&m_gatt, NULL);
+   //nrf_ble_gatt_init(&m_gatt, NULL);
     serial->write(" services init\n");
     _servicesInit();
     serial->write(" avertising init\n");
@@ -394,7 +383,10 @@ void BtleSerial::_btleEventHandler(ble_evt_t * p_ble_evt)
     case BLE_GATTS_EVT_RW_AUTHORIZE_REQUEST:
       _onAuthorizeRequest(p_ble_evt);
       break;
-
+      
+    case BLE_GATTS_EVT_EXCHANGE_MTU_REQUEST:
+            err_code = sd_ble_gatts_exchange_mtu_reply(p_ble_evt->evt.gatts_evt.conn_handle, NRF_BLE_MAX_MTU_SIZE);
+    break;
     default:
       break;
   }

@@ -54,7 +54,7 @@ macro(nRF52_setup)
     #Override the default flags so that CMAKE_C_FLAGS are not added automaticlly.
     set(CMAKE_C_LINK_EXECUTABLE "${CMAKE_C_COMPILER} <LINK_FLAGS> <OBJECTS> -o <TARGET>")
     set(CMAKE_CXX_LINK_EXECUTABLE "${CMAKE_C_COMPILER} <LINK_FLAGS> <OBJECTS> -lstdc++ -o <TARGET>")
-
+    
     include_directories(".")
 
     #Basic board definitions and drivers
@@ -180,6 +180,12 @@ macro(nRF52_addAppFIFO)
     list(APPEND SDK_SOURCE_FILES "${NRF5_SDK_PATH}/components/libraries/fifo/app_fifo.c")
 endmacro(nRF52_addAppFIFO)
 
+# adds Timer driver libraries
+macro(nRF52_addDrvTimer)
+    include_directories("${NRF5_SDK_PATH}/components/drivers_nrf/timer/")
+    list(APPEND SDK_SOURCE_FILES "${NRF5_SDK_PATH}/components/drivers_nrf/timer/nrf_drv_timer.c")
+endmacro(nRF52_addDrvTimer)
+
 # adds app-level Timer libraries
 macro(nRF52_addAppTimer)
     list(APPEND SDK_SOURCE_FILES "${NRF5_SDK_PATH}/components/libraries/timer/app_timer.c")
@@ -284,6 +290,12 @@ macro(nRF52_addBsp)
             )
 
 endmacro(nRF52_addBsp)
+
+# adds PPI driver
+macro(nRF52_addPPI)
+    include_directories("${NRF5_SDK_PATH}/components/drivers_nrf/ppi/")
+    list(APPEND SDK_SOURCE_FILES "${NRF5_SDK_PATH}/components/drivers_nrf/ppi/nrf_drv_ppi.c")
+endmacro(nRF52_addPPI)
 
 # adds app-level FDS (flash data storage) library
 macro(nRF52_addAppFDS)

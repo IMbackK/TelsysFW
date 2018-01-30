@@ -20,7 +20,6 @@
 #include "i2c.h"
 #include "point3D.h"
 
-
 #define DEFAULT_MPU9150_I2C_ADDRESS 0x68
 #define DEFAULT_COMPASS_SUBDEVICE_I2C_ADDRESS 0x0C
 

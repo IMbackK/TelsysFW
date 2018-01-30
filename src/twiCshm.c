@@ -20,7 +20,7 @@
 #define TWI0_USE_EASY_DMA 0
 #include "nrf_drv_twi.h"
 
-const nrf_drv_twi_t twiNrfDrf = NRF_DRV_TWI_INSTANCE(0);
+static const nrf_drv_twi_t twiNrfDrf = NRF_DRV_TWI_INSTANCE(0);
 
 void twi_event_handler(nrf_drv_twi_evt_t const * p_event, void * p_context)
 {

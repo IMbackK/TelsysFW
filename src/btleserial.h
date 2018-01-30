@@ -37,11 +37,13 @@ extern "C"
     #include "ble_nus.h"
     #include "app_util_platform.h"
     #include "ble_conn_state.h"
+    #include "nrf_ble_gatt.h"
 //#include "bsp.h"
   //  #include "bsp_btn_ble.h"
 }
 
 #include "serial.h"
+#include "board.h"
 
 class BtleSerial
 {
