@@ -24,10 +24,10 @@ static RingBuffer<UART_BUFFER_SIZE> rxBuffer;
 void UARTE0_UART0_IRQHandler()
 {
     if (NRF_UART0->EVENTS_RXDRDY)
-        {
-            rxBuffer.write(NRF_UART0->RXD);
-            NRF_UART0->EVENTS_RXDRDY = 0x0UL;
-        }
+    {
+        rxBuffer.write(NRF_UART0->RXD);
+        NRF_UART0->EVENTS_RXDRDY = 0x0UL;
+    }
 }
 
 
