@@ -83,20 +83,13 @@ static ble_uuid_t                       m_adv_uuids[] = {{BLE_UUID_NUS_SERVICE, 
 
 static RingBuffer<128> ringBuffer; //Bluetooth ring buffer.
 
-BtleSerial::BtleSerial(Serial* serial): _serial(serial)
+BtleSerial::BtleSerial(/*Serial* serial*/)//: _serial(serial)
 {
-    serial->write(" app timer init\n");
-    
-    serial->write(" stack init\n");
     _bleStackInit();
-    serial->write(" gap init\n");
     _gapParamsInit();
-   //nrf_ble_gatt_init(&m_gatt, NULL);
-    serial->write(" services init\n");
+   // nrf_ble_gatt_init(&m_gatt, NULL);
     _servicesInit();
-    serial->write(" avertising init\n");
     _advertisingInit();
-    serial->write(" connection paramaters init\n");
     _connectionParamatersInit();
 }
 
@@ -122,27 +115,27 @@ void BtleSerial::_bleStackInit()
 
     nrf_clock_lf_cfg_t clock_lf_cfg = NRF_CLOCK_LFCLKSRC;
 
-    _serial->write("  softdevice_handler_init");
+    //_serial->write("  softdevice_handler_init");
     
     static uint32_t ble_evt_buffer[CEIL_DIV(BLE_STACK_EVT_MSG_BUF_SIZE, sizeof(uint32_t))];                                                                         
     err_code = softdevice_handler_init(&clock_lf_cfg,ble_evt_buffer, sizeof(ble_evt_buffer), NULL); 
     
-    _serial->write(" error code: ");
-    _serial->write(err_code);
-    _serial->putChar('\n');
+    //_serial->write(" error code: ");
+    //_serial->write(err_code);
+    //_serial->putChar('\n');
     APP_ERROR_CHECK(err_code);       
 
     ble_enable_params_t ble_enable_params;
-    _serial->write("  softdevice_enable_get_default_config\n");
+    //_serial->write("  softdevice_enable_get_default_config\n");
     err_code = softdevice_enable_get_default_config(CENTRAL_LINK_COUNT,
                                                     PERIPHERAL_LINK_COUNT,
                                                     &ble_enable_params);
     APP_ERROR_CHECK(err_code);
 
     //Check the ram settings against the used number of links
-    _serial->write("  Ram addr\n");
     CHECK_RAM_START_ADDR(CENTRAL_LINK_COUNT,PERIPHERAL_LINK_COUNT);
 
+    //this code block calculates softdevice needed ram.
     /*uint32_t app_ram_base = (uint32_t) &__data_start__;
     err_code = sd_ble_enable(&ble_enable_params, &app_ram_base);
 
@@ -156,19 +149,11 @@ void BtleSerial::_bleStackInit()
 
     // Enable BLE stack.
     ble_enable_params.gatt_enable_params.att_mtu = NRF_BLE_MAX_MTU_SIZE;
-    _serial->write("  softdevice_enable");
+    //_serial->write("  softdevice_enable");
     err_code = softdevice_enable(&ble_enable_params);
-    _serial->write(" error code: ");
-    _serial->write(err_code);
-    _serial->putChar('\n');
     APP_ERROR_CHECK(err_code);
 
-    // Subscribe for BLE events.
-    _serial->write("  softdevice_ble_evt_handler_set");
     err_code = softdevice_ble_evt_handler_set(_btleEventHandler);
-    _serial->write(" error code: ");
-    _serial->write(err_code);
-    _serial->putChar('\n');
     APP_ERROR_CHECK(err_code);
 }
 
@@ -271,17 +256,17 @@ void BtleSerial::_connected(const ble_gap_evt_t * const p_gap_evt)
   }
   else
   {
-    // Continue advertising. More connections can be established because the maximum link count has not been reached.
+    //Continue advertising. More connections can be established because the maximum link count has not been reached.
     BtleSerial::start();
   }
 }
 
 void BtleSerial::_disconnected(ble_gap_evt_t const * const p_gap_evt)
 {
-  uint32_t    periph_link_cnt = ble_conn_state_n_peripherals(); // Number of peripheral links.
+  uint32_t    periph_link_cnt = ble_conn_state_n_peripherals(); //Number of peripheral links.
   if (periph_link_cnt == (PERIPHERAL_LINK_COUNT - 1))
   {
-    // Advertising is not running when all connections are taken, and must therefore be started.
+    //Advertising is not running when all connections are taken, and must therefore be started.
     BtleSerial::start();
   }
 }
@@ -394,14 +379,12 @@ void BtleSerial::_btleEventHandler(ble_evt_t * p_ble_evt)
 
 bool BtleSerial::write(uint8_t* buffer, uint32_t length)
 {
-    if( length <= BLE_NUS_MAX_DATA_LEN && ble_nus_string_send(&m_nus, buffer, length) == NRF_SUCCESS ) return true;
-    else return false;
+    return( length <= BLE_NUS_MAX_DATA_LEN && ble_nus_string_send(&m_nus, buffer, length) == NRF_SUCCESS );
 }
 
 bool BtleSerial::write(const char* in, const unsigned int length)
 {
-    if( length <= BLE_NUS_MAX_DATA_LEN && ble_nus_string_send(&m_nus, (uint8_t*)in, length) == NRF_SUCCESS ) return true;
-    else return false;
+    return ( length <= BLE_NUS_MAX_DATA_LEN && ble_nus_string_send(&m_nus, (uint8_t*)in, length) == NRF_SUCCESS );
 }
 
 bool BtleSerial::write(const char in[])
@@ -414,6 +397,10 @@ bool  BtleSerial::write(int32_t in)
     if(in == 0)
     {
         return putChar('0');
+    }
+    else if(in == 1)
+    {
+        return putChar('1');
     }
     else
     {
@@ -445,3 +432,34 @@ bool BtleSerial::isConnected()
 {
     return ble_conn_state_n_peripherals() > 0;
 }
+
+bool BtleSerial::dataIsWaiting()
+{
+    return !ringBuffer.isEmpty();
+}
+
+char BtleSerial::getChar()
+{
+    if(dataIsWaiting())
+    {
+        return ringBuffer.read();
+    }
+    else return '\0';
+}
+
+unsigned int BtleSerial::getString(char* buffer, const unsigned int bufferLength)
+{
+    return ringBuffer.getString(_terminator, buffer, bufferLength);
+}
+
+unsigned int BtleSerial::read( uint8_t* buffer, const unsigned int length )
+{
+    return ringBuffer.read(buffer, length);
+}
+
+void BtleSerial::flush()
+{
+    ringBuffer.flush();
+}
+
+void BtleSerial::setTerminator(char terminator){_terminator = terminator;}

@@ -50,7 +50,7 @@ class BtleSerial
     
 private:
     
-    Serial* _serial;
+    char _terminator = '\n';
     
     void _bleStackInit();
     void _advertisingInit();
@@ -66,7 +66,7 @@ private:
     static void _btleDataHandler(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length);
     
 public:
-    BtleSerial(Serial* serial);
+    BtleSerial();
     static void start();
     bool dataIsWaiting();
     bool write( uint8_t* buffer, uint32_t length);
@@ -74,5 +74,10 @@ public:
     bool write(const char in[]);
     bool write(int32_t in);
     bool putChar(const char c);
+    char getChar();
+    unsigned int getString(char* buffer, const unsigned int length);
+    unsigned int read(uint8_t* buffer, const unsigned int length);
+    void setTerminator(const char terminator);
+    void flush();
     bool isConnected();
 };
