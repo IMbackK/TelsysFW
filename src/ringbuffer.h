@@ -23,13 +23,18 @@ class RingBuffer
 {
 private:
     
-    uint32_t _headIndex = 0;
-    uint32_t _tailIndex = 0;
+    uint_fast16_t _headIndex = 0;
+    uint_fast16_t _tailIndex = 0;
     uint8_t _buffer[BUFFER_SIZE];
     
 public:
     
     RingBuffer(){}
+    
+    uint_fast16_t remaining()
+    {
+        return (_headIndex-_tailIndex);
+    }
     
     bool isEmpty()
     {
@@ -46,12 +51,14 @@ public:
         else return '\0';
     }
     
-    void read( uint8_t* buffer, unsigned int length )
+    unsigned int read( uint8_t* buffer, unsigned int length )
     {
-        for(uint8_t i = 0; i < length; i++)
+        unsigned int i = 0;
+        for(; i < length && !isEmpty(); i++)
         {
             buffer[i] = read();
         }
+        return i;
     }
     
     void write( uint8_t in )
@@ -61,8 +68,8 @@ public:
             _headIndex -= BUFFER_SIZE;
             _tailIndex -= BUFFER_SIZE;
         }
-        _buffer[_tailIndex] = in;
-        _tailIndex++;
+        _buffer[_headIndex % BUFFER_SIZE] = in;
+        _headIndex++;
     }
     
     void write( uint8_t* buffer, unsigned int length )
@@ -80,25 +87,18 @@ public:
     unsigned int getString(uint8_t terminator, char* buffer, const unsigned int bufferLength)
     {
         unsigned int i = 0;
-        for(; i <= (_headIndex-_tailIndex) && i <= BUFFER_SIZE && _buffer[(_tailIndex+i) % BUFFER_SIZE] != terminator; i++);
+        for(; i <= remaining() && i <= BUFFER_SIZE && _buffer[(_tailIndex+i) % BUFFER_SIZE] != terminator; i++);
         
-        if( i < (_headIndex-_tailIndex) && i > 0)
+        if( i < remaining() && i > 0)
         {
-            unsigned int j = 0;
-            for(; j < i && j < bufferLength-1 ; j++)
-            {
-                buffer[j] = read();
-            }
-            buffer[j+1]='\0';
+            if(i > bufferLength-1) i = bufferLength-1;
+            read((uint8_t*)buffer, i);
+            buffer[i+1]='\0';
             _tailIndex++;
         }
-        else
-        {
-            i = 0;
-            if( _tailIndex >= (32768) - 2*BUFFER_SIZE ) flush();
-        }
+        else i = 0;
 
-        if (_buffer[(_tailIndex+i) % BUFFER_SIZE] == terminator) _tailIndex++;
+        if (_buffer[(_tailIndex+i) % BUFFER_SIZE] == terminator || _buffer[(_tailIndex+i) % BUFFER_SIZE] == '\0'  ) _tailIndex++;
         
         return i;
     }
