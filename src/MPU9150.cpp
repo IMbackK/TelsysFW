@@ -85,17 +85,7 @@ Mpu9150::Mpu9150(const uint8_t  address, const uint8_t compassAddress): I2cDevic
 {
     start();
     
-    uint8_t mpuAdress = _devAdress;
-    _devAdress = _compassAddress << 1;      //change Address to Compass
-    
-    //Subdevice init sequence taken from arduino driver
-
-    writeRegsiter(0x0A, 0x00); //PowerDownMode
-    writeRegsiter(0x0A, 0x0F); //SelfTest
-    writeRegsiter(0x0A, 0x00); //PowerDownMode
-
-    _devAdress = mpuAdress;      //change Address to MPU
-
+    writeRegsiter(MPU9150_ACCEL_CONFIG, 0b00010000);
     
     writeRegsiter(MPU9150_I2C_MST_CTRL, 0x40); //Wait for Data at Slave0
     
@@ -111,15 +101,12 @@ Mpu9150::Mpu9150(const uint8_t  address, const uint8_t compassAddress): I2cDevic
     writeRegsiter(MPU9150_I2C_SLV1_DO, 0x01); //overvride register
     writeRegsiter(MPU9150_I2C_MST_DELAY_CTRL, 0x03); //set delay rate
     
-
     writeRegsiter(0x01, 0x80);
 
-    writeRegsiter(MPU9150_I2C_SLV4_CTRL, 0x04); //set i2c slv4 delay. Why?
     writeRegsiter(MPU9150_I2C_SLV1_DO, 0x00); //override register
     writeRegsiter(MPU9150_USER_CTRL, 0x00); //clear usr setting
     writeRegsiter(MPU9150_I2C_SLV1_DO, 0x01); //override register
     writeRegsiter(MPU9150_USER_CTRL, 0x20); //enable master i2c mode
-    writeRegsiter(MPU9150_I2C_SLV4_CTRL, 0x13); //disable slv4. Why?
     
     stop();
 }
@@ -144,14 +131,14 @@ Point3D <int16_t> Mpu9150::getAccelData()
 {
     Point3D <int16_t> result;
     
-    result.x  = txRxSequence(MPU9150_ACCEL_XOUT_H) << 8;
-    result.x += txRxSequence(MPU9150_ACCEL_XOUT_L);
+    result.x  = txRxSequence(MPU9150_ACCEL_XOUT_L) << 8;
+    result.x += txRxSequence(MPU9150_ACCEL_XOUT_H);
     
-    result.y  = txRxSequence(MPU9150_ACCEL_YOUT_H) << 8;
-    result.y += txRxSequence(MPU9150_ACCEL_YOUT_L);
+    result.y  = txRxSequence(MPU9150_ACCEL_YOUT_L) << 8;
+    result.y += txRxSequence(MPU9150_ACCEL_YOUT_H);
     
-    result.z  = txRxSequence(MPU9150_ACCEL_ZOUT_H) << 8;
-    result.z += txRxSequence(MPU9150_ACCEL_ZOUT_L);
+    result.z  = txRxSequence(MPU9150_ACCEL_ZOUT_L) << 8;
+    result.z += txRxSequence(MPU9150_ACCEL_ZOUT_H);
     
     return result;
 }
@@ -160,16 +147,16 @@ Point3D <int16_t> Mpu9150::getMagnData()
 {
     Point3D <int16_t> result;
     
-    result.x  = txRxSequence(MPU9150_GYRO_XOUT_H) << 8;
-    result.x += txRxSequence(MPU9150_GYRO_XOUT_L);
+    result.x  = txRxSequence(MPU9150_GYRO_XOUT_L) << 8;
+    result.x += txRxSequence(MPU9150_GYRO_XOUT_H);
     
     
-    result.y  = txRxSequence(MPU9150_GYRO_YOUT_H) << 8;
-    result.y += txRxSequence(MPU9150_GYRO_YOUT_L);
+    result.y  = txRxSequence(MPU9150_GYRO_YOUT_L) << 8;
+    result.y += txRxSequence(MPU9150_GYRO_YOUT_H);
     
     
-    result.z  = txRxSequence(MPU9150_GYRO_ZOUT_H) << 8;
-    result.z += txRxSequence(MPU9150_GYRO_ZOUT_L);
+    result.z  = txRxSequence(MPU9150_GYRO_ZOUT_L) << 8;
+    result.z += txRxSequence(MPU9150_GYRO_ZOUT_H);
     
     return result;
 }

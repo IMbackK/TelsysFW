@@ -364,7 +364,7 @@
 // <2=> Synth 
 
 #ifndef CLOCK_CONFIG_LF_SRC
-#define CLOCK_CONFIG_LF_SRC 1
+#define CLOCK_CONFIG_LF_SRC 0
 #endif
 
 // <o> CLOCK_CONFIG_IRQ_PRIORITY  - Interrupt priority
@@ -1902,7 +1902,7 @@
 // <3=> 14 bit 
 
 #ifndef SAADC_CONFIG_RESOLUTION
-#define SAADC_CONFIG_RESOLUTION 0
+#define SAADC_CONFIG_RESOLUTION 3
 #endif
 
 // <o> SAADC_CONFIG_OVERSAMPLE  - Sample period
@@ -1918,7 +1918,7 @@
 // <8=> 256x 
 
 #ifndef SAADC_CONFIG_OVERSAMPLE
-#define SAADC_CONFIG_OVERSAMPLE 3
+#define SAADC_CONFIG_OVERSAMPLE 5
 #endif
 
 // <q> SAADC_CONFIG_LP_MODE  - Enabling low power mode
@@ -3212,7 +3212,7 @@
 // <i> @ref FS_ERR_QUEUE_FULL errors when calling @ref fs_store or @ref fs_erase.
 
 #ifndef FS_QUEUE_SIZE
-#define FS_QUEUE_SIZE 4
+#define FS_QUEUE_SIZE 2
 #endif
 
 // <o> FS_OP_MAX_RETRIES - Number attempts to execute an operation if the SoftDevice fails. 
@@ -3220,7 +3220,7 @@
 // <i> error often. The SoftDevice may fail to schedule flash access due to high BLE activity.
 
 #ifndef FS_OP_MAX_RETRIES
-#define FS_OP_MAX_RETRIES 3
+#define FS_OP_MAX_RETRIES 4
 #endif
 
 // <o> FS_MAX_WRITE_SIZE_WORDS - Maximum number of words to be written to flash in a single operation. 
@@ -3230,7 +3230,7 @@
 // <i> @ref sd_flash_write, which is 256 words for nRF51 ICs and 1024 words for nRF52 ICs.
 
 #ifndef FS_MAX_WRITE_SIZE_WORDS
-#define FS_MAX_WRITE_SIZE_WORDS 1024
+#define FS_MAX_WRITE_SIZE_WORDS 512
 #endif
 
 #endif //FSTORAGE_ENABLED

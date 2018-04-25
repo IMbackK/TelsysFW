@@ -16,7 +16,6 @@ nRF52_addTwiDrvMaster()
 nRF52_addBLEGATT()
 nRF52_addBLEAdvertising()
 nRF52_addBLElbs()
-nRF52_addBLEnus()
 nRF52_addSaadc()
 nRF52_addAppFDS()
 nRF52_addAppTimer()
@@ -24,9 +23,9 @@ nRF52_addDrvTimer()
 nRF52_addAppFDS()
 nRF52_addPPI()
 
-add_definitions(-DBOARD_PROTOONE)
+add_definitions(-DBOARD_V_1_0)
 
-list(APPEND SOURCE_FILES src/main.cpp src/serial.cpp src/i2c.cpp src/adc.c src/twiCshm.c src/MPU9150.cpp src/btleserial.cpp src/MCP4725.cpp )
+list(APPEND SOURCE_FILES src/main.cpp src/serial.cpp src/i2c.cpp src/adc.c src/twiCshm.c src/MPU9150.cpp src/btle.cpp src/MCP4725.cpp src/cal.cpp src/storage.c src/sampler.cpp)
 
 
 nRF52_addExecutable(${PROJECT_NAME} "${SOURCE_FILES}")

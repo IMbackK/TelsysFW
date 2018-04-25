@@ -20,8 +20,6 @@
 #include <stdint.h>
 #include "board.h"
 
-#define BUFFER_SIZE 128
-
 class I2cDevice
 {
 protected:

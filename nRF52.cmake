@@ -16,9 +16,9 @@ endif ()
 macro(nRF52_setup)
 
     set(CMAKE_C_STANDARD 99)
-    set(CMAKE_CXX_STANDARD 98)
+    set(CMAKE_CXX_STANDARD 11)
 
-    #use arm-none-eabi-gcc
+    #use arm-none-eabi-gcc for cross compilation
     set(CMAKE_C_COMPILER "${ARM_NONE_EABI_TOOLCHAIN_PATH}/arm-none-eabi-gcc")
     set(CMAKE_CXX_COMPILER "${ARM_NONE_EABI_TOOLCHAIN_PATH}/arm-none-eabi-c++")
     set(CMAKE_ASM_COMPILER "${ARM_NONE_EABI_TOOLCHAIN_PATH}/arm-none-eabi-gcc")
@@ -29,7 +29,7 @@ macro(nRF52_setup)
 
     set(NRF5_LINKER_SCRIPT "${CMAKE_SOURCE_DIR}/ld/gcc_nrf52.ld")
     set(CPU_FLAGS "-mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16")
-    add_definitions(-DNRF52 -DNRF52832 -DNRF52_PAN_64 -DNRF52_PAN_12 -DNRF52_PAN_58 -DNRF52_PAN_54 -DNRF52_PAN_31 -DNRF52_PAN_51 -DNRF52_PAN_36 -DNRF52_PAN_15 -DNRF52_PAN_20 -DNRF52_PAN_55 -DBOARD_PCA10040) #todo: write own board specifier.
+    add_definitions(-DNRF52 -DNRF52832 -DNRF52_PAN_64 -DNRF52_PAN_12 -DNRF52_PAN_58 -DNRF52_PAN_54 -DNRF52_PAN_31 -DNRF52_PAN_51 -DNRF52_PAN_36 -DNRF52_PAN_15 -DNRF52_PAN_20 -DNRF52_PAN_55)
     
     #Specify softdevice to use.
     add_definitions(-DSOFTDEVICE_PRESENT -DS132 -DBLE_STACK_SUPPORT_REQD -DNRF_SD_BLE_API_VERSION=3)
@@ -45,21 +45,20 @@ macro(nRF52_setup)
 
     set(COMMON_FLAGS "-MP -MD -mthumb -mabi=aapcs -Wall -Os -g3 -ffunction-sections -fdata-sections -fno-strict-aliasing -fno-builtin --short-enums ${CPU_FLAGS}")
 
-    # compiler/assambler/linker flags
+    #compiler/assambler/linker flags
     set(CMAKE_C_FLAGS "${COMMON_FLAGS}")
-    set(CMAKE_CXX_FLAGS "${COMMON_FLAGS} -std=c++11") #todo: why ist -std=c++11 overriden?
+    set(CMAKE_CXX_FLAGS "${COMMON_FLAGS}")
     message( "g++ flags: ${CMAKE_CXX_FLAGS}" )
-    set(CMAKE_ASM_FLAGS "-MP -MD -std=c11 -x assembler-with-cpp")  
-    set(CMAKE_EXE_LINKER_FLAGS "-mthumb -mabi=aapcs -std=c++11 -std=c99 -L ${NRF5_SDK_PATH}/components/toolchain/gcc -T${NRF5_LINKER_SCRIPT} ${CPU_FLAGS} -Wl,--gc-sections --specs=nano.specs -lc -lnosys -lm")
+    set(CMAKE_ASM_FLAGS "-MP -MD -x assembler-with-cpp")  
+    set(CMAKE_EXE_LINKER_FLAGS "-mthumb -mabi=aapcs -std=c99 -L ${NRF5_SDK_PATH}/components/toolchain/gcc -T${NRF5_LINKER_SCRIPT} ${CPU_FLAGS} -Wl,--gc-sections --specs=nano.specs -lc -lnosys -lm")
     #Override the default flags so that CMAKE_C_FLAGS are not added automaticlly.
     set(CMAKE_C_LINK_EXECUTABLE "${CMAKE_C_COMPILER} <LINK_FLAGS> <OBJECTS> -o <TARGET>")
     set(CMAKE_CXX_LINK_EXECUTABLE "${CMAKE_C_COMPILER} <LINK_FLAGS> <OBJECTS> -lstdc++ -o <TARGET>")
     
     include_directories(".")
 
-    #Basic board definitions and drivers
+    #Basic drivers
     include_directories(
-            "${NRF5_SDK_PATH}/components/boards"
             "${NRF5_SDK_PATH}/components/device"
             "${NRF5_SDK_PATH}/components/libraries/util"
             "${NRF5_SDK_PATH}/components/drivers_nrf/make"
@@ -72,28 +71,28 @@ macro(nRF52_setup)
             "${NRF5_SDK_PATH}/components/drivers_nrf/gpiote"
     )
 
-    # gcc toolchain specyfic
+    #gcc toolchain specyfic
     include_directories(
             "${NRF5_SDK_PATH}/components/toolchain/"
             "${NRF5_SDK_PATH}/components/toolchain/gcc"
             "${NRF5_SDK_PATH}/components/toolchain/cmsis/include"
     )
 
-    # log
+    #log
     include_directories(
             "${NRF5_SDK_PATH}/components/libraries/log"
             "${NRF5_SDK_PATH}/components/libraries/log/src"
             "${NRF5_SDK_PATH}/components/libraries/timer"
     )
 
-    # Segger RTT
+    #Segger RTT
     include_directories(
             "${NRF5_SDK_PATH}/external/segger_rtt/"
     )
 
-    # basic board support and drivers
+    #basic drivers
     list(APPEND SDK_SOURCE_FILES
-            "${NRF5_SDK_PATH}/components/boards/boards.c"
+            
             "${NRF5_SDK_PATH}/components/drivers_nrf/common/nrf_drv_common.c"
             "${NRF5_SDK_PATH}/components/drivers_nrf/clock/nrf_drv_clock.c"
             "${NRF5_SDK_PATH}/components/drivers_nrf/rtc/nrf_drv_rtc.c"
@@ -180,6 +179,12 @@ macro(nRF52_addAppFIFO)
     list(APPEND SDK_SOURCE_FILES "${NRF5_SDK_PATH}/components/libraries/fifo/app_fifo.c")
 endmacro(nRF52_addAppFIFO)
 
+# adds Board support libraries
+macro(nRF52_addBoard)
+    include_directories("${NRF5_SDK_PATH}/components/boards")
+    list(APPEND SDK_SOURCE_FILES "${NRF5_SDK_PATH}/components/boards/boards.c")
+endmacro(nRF52_addBoard)
+
 # adds Timer driver libraries
 macro(nRF52_addDrvTimer)
     include_directories("${NRF5_SDK_PATH}/components/drivers_nrf/timer/")
@@ -200,7 +205,7 @@ endmacro(nRF52_addAppUART)
 # adds nordic UART driver
 macro(nRF52_addDrvUART) 
     list(APPEND SDK_SOURCE_FILES"${NRF5_SDK_PATH}/components/drivers_nrf/uart/nrf_drv_uart.c")
-endmacro(nRF52_addAppUART)
+endmacro(nRF52_addDrvUART)
 
 
 # adds app-level Button library

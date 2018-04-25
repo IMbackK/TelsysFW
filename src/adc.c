@@ -74,7 +74,7 @@ uint16_t getAdcValue(void)
         nrf_drv_saadc_sample_convert(0, &sample);
         if(sample == -2000) nrf_drv_saadc_sample_convert(0, &sample);
         if(sample < 0) sample = 0;
-        uint32_t sampleUint32 = sample;
+        uint32_t sampleUint32 = sample*SAADC_SOFTWARE_GAIN;
         sampleUint32 = sampleUint32 << (8-2*SAADC_CONFIG_RESOLUTION);
         if(sampleUint32 > UINT16_MAX-1) sampleUint32 = UINT16_MAX-1;
         return sampleUint32;

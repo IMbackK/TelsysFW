@@ -48,125 +48,104 @@ extern "C"
 #include "twiCshm.h"
 #include "MPU9150.h"
 #include "MCP4725.h"
-#include "btleserial.h"
+#include "btle.h"
 #include "cal.h"
+#include "sampler.h"
 
-#define ADC_PAKET_SIGNATURE 0x4587AD75
-
-extern "C" void noophandler(void* param)
+uint16_t meanAdcValue( uint16_t count )
 {
-}
-
-inline uint16_t ticksToUs(uint32_t ticks)
-{
-    return ticks*((APP_TIMER_PRESCALER+1)*1000000) / APP_TIMER_CLOCK_FREQ;
-}
-
-inline uint32_t usToTicks(uint16_t us)
-{
-    return us * APP_TIMER_CLOCK_FREQ /((APP_TIMER_PRESCALER+1)*1000000);
-}
-
-namespace adcSampler
-{
-    BtleSerial* btle; // under the rug you go
-    void adcSampleHandler(int16_t* buffer, uint16_t length)
+    uint32_t accumulator = 0;
+    for(unsigned i  = 0; i < count; i++) 
     {
-        uint16_t delta = 10;
-        if(btle->isConnected()) 
-        {
-            uint8_t packet[1024];
-            packet[0] =   ADC_PAKET_SIGNATURE >> 24;
-            packet[1] = ( ADC_PAKET_SIGNATURE & 0x00FF0000) >> 16;
-            packet[2] = ( ADC_PAKET_SIGNATURE & 0x0000FF00) >> 8;
-            packet[3] = ( ADC_PAKET_SIGNATURE & 0x000000FF);
-            
-            for(uint16_t i = 0; i < length; i++)
-            {
-                    packet[i+4] = buffer[i] >> 8; 
-                    packet[i+5] = buffer[i] & 0x00FF;
-                    packet[i+6] = delta >> 8; 
-                    packet[i+7] = delta & 0x00FF;
-                   
-            }
-            packet[length+7] = 0xFF;
-            packet[length+8] = 0xFF;
-            btle->write(packet,length+9);
-        }
+        accumulator+=getAdcValue();
+        nrf_delay_us(100);
     }
+    return accumulator/count;
 }
 
 void offsetCallibration(Mcp4725* dac)
 {
     uint16_t value = 0;
     dac->setValue(0);
-    nrf_delay_ms(50);
-    nrf_drv_gpiote_out_toggle(LED_PIN);
-    while(getAdcValue() > UINT16_MAX/2  && (value & 0xF000) == 0 )
+    
+    #ifdef SG_PM_PIN
+    nrf_drv_gpiote_out_set(SG_PM_PIN);
+    #endif
+    
+    nrf_delay_ms(500);
+    
+    while(meanAdcValue(5) > UINT16_MAX/2  && (value & 0xF000) == 0 )
     {
         dac->setValue(value+=8);
         nrf_delay_ms(1);
     }
-    nrf_drv_gpiote_out_toggle(LED_PIN);
-    nrf_delay_ms(100);
-    nrf_drv_gpiote_out_toggle(LED_PIN);
-    while(getAdcValue() < UINT16_MAX/2 && value > 1)
+    nrf_delay_ms(500);
+    while(meanAdcValue(5) < UINT16_MAX/2 && value > 1)
     {
         dac->setValue(value--);
+        nrf_delay_ms(1);
     }
     nrf_drv_gpiote_out_toggle(LED_PIN);
+    
+    #ifdef SG_PM_PIN
+    nrf_drv_gpiote_out_clear(SG_PM_PIN);
+    #endif
+}
+
+void debugBlink()
+{
+    nrf_drv_gpiote_out_toggle(LED_PIN);
+    nrf_delay_ms(200);
+    nrf_drv_gpiote_out_toggle(LED_PIN);
+    nrf_delay_ms(200);
 }
 
 int main()
-{
-    APP_TIMER_INIT(0, APP_TIMER_OP_QUEUE_SIZE, NULL);
+{   
+    //APP_TIMER_INIT(0, APP_TIMER_OP_QUEUE_SIZE, NULL);
     
     if(!nrf_drv_gpiote_is_init())nrf_drv_gpiote_init();
     nrf_drv_gpiote_out_config_t pinconf;
     pinconf.init_state = NRF_GPIOTE_INITIAL_VALUE_LOW;
     pinconf.task_pin = false;
+
+        nrf_drv_gpiote_out_init(LED_PIN, &pinconf);
     
-    nrf_drv_gpiote_out_init(LED_PIN, &pinconf);
-    nrf_drv_gpiote_out_init(7, &pinconf);
+    #ifdef AMP_POWER_PIN
+    nrf_drv_gpiote_out_init(AMP_POWER_PIN, &pinconf);
+    nrf_drv_gpiote_out_set(AMP_POWER_PIN);
+    #endif
     
-    nrf_drv_gpiote_out_toggle(LED_PIN);
-    nrf_delay_ms(500);
-    nrf_drv_gpiote_out_toggle(LED_PIN);
-    nrf_delay_ms(500);
+    #ifdef SG_PM_PIN
+    nrf_drv_gpiote_out_init(SG_PM_PIN, &pinconf);
+    nrf_drv_gpiote_out_clear(SG_PM_PIN);
+    #endif
+    
+    debugBlink();
 
     #ifdef SERIAL_ENABLE
     Serial serial;
     serial.write("\n -------------- Telemetrysystem Starting -------- \n");
     #endif
     
-    nrf_drv_gpiote_out_toggle(LED_PIN);
-    nrf_delay_ms(500);
-    nrf_drv_gpiote_out_toggle(LED_PIN);
-    nrf_delay_ms(500);
-    
+    debugBlink();
     
     //BTLE
     #ifdef SERIAL_ENABLED
     serial.write("btleSeral init \n");
     #endif
-    BtleSerial btle;
+    Btle btle;
     btle.start();
     
-    
-    nrf_drv_gpiote_out_toggle(LED_PIN);
-    nrf_delay_ms(500);
-    nrf_drv_gpiote_out_toggle(LED_PIN);
-    nrf_delay_ms(500);
+    debugBlink();
     
     //ADC
     #ifdef SERIAL_ENABLED
     serial.write("adc init \n");
     #endif
-    bool adcSucsess = adcInit();
-    /*adcSampler::btle = &btle;
-    serial.write("adc async init return: ");
-    serial.write(adcCreateAsyncTask(&adcSampler::adcSampleHandler));
-    serial.putChar('\n');*/
+    adcInit();
+    
+    debugBlink();
     
     //i2c
     twiCshmInit(DEFAULT_SCL_PIN, DEFAULT_SDA_PIN);
@@ -175,69 +154,62 @@ int main()
     mpu.start();
     
     Mcp4725 dac;
-    nrf_delay_ms(500);
+    
+    debugBlink();
     
     //Cal
     offsetCallibration(&dac);
     Cal cal;
     //cal.load();
     
-    //needet to start RTC1
-    APP_TIMER_DEF(dummyTimer); 
-    app_timer_create(&dummyTimer, APP_TIMER_MODE_REPEATED, noophandler);
-    app_timer_start(dummyTimer, 1000, NULL);
-    uint32_t previousTicks = app_timer_cnt_get();
-    uint32_t ticksSincePacket = previousTicks;
-    uint32_t targetDelta = 10000;
+    debugBlink();
     
-    bool sample = false;
+    Sampler sampler(&btle, &cal, &mpu);
     
-#define SAMPLE_BUFFER_SIZE 5
+    //Sample Timer
+    APP_TIMER_DEF(sampleTimerAdc); 
+    app_timer_create(&sampleTimerAdc, APP_TIMER_MODE_REPEATED, &Sampler::sampleStaticAdc);
     
-    uint16_t sampleBuffer[SAMPLE_BUFFER_SIZE];
-    uint8_t currentSampleBufferIndex = 0;
     
-    int32_t smoothSample = 0;
-    uint16_t prevSample = 0;
+    APP_TIMER_DEF(sampleTimerAux); 
+    app_timer_create(&sampleTimerAux, APP_TIMER_MODE_REPEATED, &Sampler::sampleStaticAux);
     
-    while (1)
+    uint32_t desierdTicks = 164*2; //timmer runs at 32768Hz. this value corrsponds to 1/100 of a second.
+    
+    bool sampeling = false;
+    debugBlink();
+    
+    uint count = 0;
+    
+    while(true)
     {
-        uint32_t current = app_timer_cnt_get();
-        uint32_t delta;
-        app_timer_cnt_diff_compute(current, previousTicks, &delta);
-        previousTicks = current;
-        ticksSincePacket += delta;
-        
-
-        /* volatile Point3D <int16_t> accel = mpu.getAccelData();
-        volatile Point3D <int16_t> magn = mpu.getMagnData();
-        volatile int16_t temperature = mpu.getTemperature();
-        volatile uint16_t strainValue = cal.applyTemp(cal.applyAmp(getAdcValue()), temperature);*/
-        volatile uint16_t strainValue = cal.applyAmp(getAdcValue());
-        //volatile uint16_t strainValue = getAdcValue();
-        
-        smoothSample = smoothSample + (strainValue - smoothSample)/8;
-        if(prevSample - 100  )
-        
-        if(smoothSample < 0) smoothSample = 0;
-        else if(smoothSample > UINT16_MAX) smoothSample = UINT16_MAX;
-
-        sampleBuffer[currentSampleBufferIndex] = (uint16_t)smoothSample;
-        currentSampleBufferIndex++;
-        
-        uint8_t rxBuffer[256];
-        int length = btle.read(rxBuffer, 256);
+        uint8_t rxBuffer[64];
+        int length = btle.read(rxBuffer, 64);
         if( length > 0 )
         {
-            if( length > 2 && rxBuffer[0] == 'o' && rxBuffer[1] == 'n') 
+            if( length > 2 && rxBuffer[0] == 'o' && rxBuffer[1] == 'n' ) 
             {
-                sample = true;
-                currentSampleBufferIndex = 0;
-                ticksSincePacket = 0;
+                sampler.resetTimes();
+                app_timer_start(sampleTimerAdc, desierdTicks, reinterpret_cast<void*>(&sampler));
+                app_timer_start(sampleTimerAux, 1638, reinterpret_cast<void*>(&sampler)); //20Hz
+                sampeling = true;
+                nrf_delay_us(100);
             }
-            else if( length > 3 && rxBuffer[0] == 'o' && rxBuffer[1] == 'f' && rxBuffer[2] == 'f' )sample = false;
-            else if( length > 3 && rxBuffer[0] == 'r' && rxBuffer[1] == 's' && rxBuffer[2] == 't' )sd_nvic_SystemReset();
-            else if( sample == false)
+            else if( length > 3 && rxBuffer[0] == 'o' && rxBuffer[1] == 'f' && rxBuffer[2] == 'f')
+            {
+                app_timer_stop(sampleTimerAdc);
+                app_timer_stop(sampleTimerAux);
+                sampeling = false;
+                nrf_delay_us(100);
+            }
+            else if(length > 2 && rxBuffer[0] == 'o' && rxBuffer[1] == 's' && rxBuffer[2] == 't')
+            {
+                app_timer_stop(sampleTimerAux);
+                offsetCallibration(&dac);
+                app_timer_start(sampleTimerAux, 1092, reinterpret_cast<void*>(&sampler));
+            }
+            else if( length > 3 && rxBuffer[0] == 'r' && rxBuffer[1] == 's' && rxBuffer[2] == 't' ) sd_nvic_SystemReset();
+            else if( !sampeling )
             {
                 if(length > 12 && rxBuffer[0] == 'c' && rxBuffer[1] == 'a' && rxBuffer[2] == 'l')
                 {
@@ -245,46 +217,25 @@ int main()
                     cal.setTempValues(rxBuffer+8);
                     cal.save();
                 }
-                if(length > 6 && strncmp((char*)rxBuffer, "offset",  6))
+                
+                else if(length > 4 && rxBuffer[0] == 'r' && rxBuffer[1] == 'a' && rxBuffer[2] == 't')
                 {
-                    offsetCallibration(&dac);
-                    sample = true;
-                    currentSampleBufferIndex = 0;
-                    ticksSincePacket = 0;
+                    uint16_t newSampleRate = rxBuffer[4];
+                    newSampleRate += rxBuffer[3] << 8;
+                    if(newSampleRate < 20) newSampleRate = 20;
+                    else if(newSampleRate > 500) newSampleRate = 500;
+                    desierdTicks = usToTicks(1000000/newSampleRate);
+                    debugBlink();
                 }
-            }
-        }
-        
-        if(currentSampleBufferIndex == SAMPLE_BUFFER_SIZE)
-        {
-            currentSampleBufferIndex = 0;
-            if(btle.isConnected() && sample) 
-            {
-                uint16_t usPacketDelta = ticksToUs(ticksSincePacket);
-                uint8_t packet[SAMPLE_BUFFER_SIZE*2+9];
-                packet[0] =   ADC_PAKET_SIGNATURE >> 24;
-                packet[1] = ( ADC_PAKET_SIGNATURE & 0x00FF0000) >> 16;
-                packet[2] = ( ADC_PAKET_SIGNATURE & 0x0000FF00) >> 8;
-                packet[3] = ( ADC_PAKET_SIGNATURE & 0x000000FF);
-                packet[4] = SAMPLE_BUFFER_SIZE;
-                packet[5] = usPacketDelta >> 8; 
-                packet[6] = usPacketDelta & 0x00FF;
-                for(uint8_t i = 0; i < SAMPLE_BUFFER_SIZE; i++)
-                {
-                    packet[i*2+7] = sampleBuffer[i] >> 8; 
-                    packet[i*2+8] = sampleBuffer[i] & 0x00FF;
-                }
-                packet[SAMPLE_BUFFER_SIZE*2+7] = 0xFF;
-                packet[SAMPLE_BUFFER_SIZE*2+8] = 0xFF;
-                btle.write(packet,SAMPLE_BUFFER_SIZE*2+9);
-                ticksSincePacket = 0;
             }
         }
         
         nrf_drv_gpiote_out_toggle(LED_PIN);
-        nrf_drv_gpiote_out_toggle(SAMPLE_CLOCK_PIN);
-        
-       nrf_delay_us(1000);
+        /*
+        count+=2;
+        dac.setValue(count);
+        */
+        nrf_delay_ms(100);
     }
     
     return 0;
