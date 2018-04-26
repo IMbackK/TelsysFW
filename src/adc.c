@@ -3,6 +3,7 @@
 #include "nrf_drv_saadc.h"
 #include "nrf_drv_ppi.h"
 #include "nrf_drv_timer.h"
+#include "nrf_delay.h"
 #include "app_error.h"
 
 #include "app_util_platform.h"
@@ -80,4 +81,15 @@ uint16_t getAdcValue(void)
         return sampleUint32;
     }
     else return 0;
+}
+
+uint16_t meanAdcValue(uint16_t count)
+{
+    uint32_t accumulator = 0;
+    for(unsigned i  = 0; i < count; i++) 
+    {
+        accumulator+=getAdcValue();
+        nrf_delay_us(100);
+    }
+    return accumulator/count;
 }

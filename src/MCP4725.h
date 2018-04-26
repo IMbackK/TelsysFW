@@ -19,8 +19,6 @@
 
 #include "i2c.h"
 
-
-
 class Mcp4725 : private I2cDevice
 {
 private:
@@ -29,7 +27,7 @@ private:
 public:
     Mcp4725(const uint8_t  address = DEFAULT_MCP4725_ADRESS);
     void setValue(const uint16_t value);
-    void setStartupValue(const uint16_t value, const bool poweroff);
+    void setStartupValue(const uint16_t value, const bool poweroff = false);
     void off();
     void on();
 };

@@ -25,7 +25,7 @@ nRF52_addPPI()
 
 add_definitions(-DBOARD_V_1_0)
 
-list(APPEND SOURCE_FILES src/main.cpp src/serial.cpp src/i2c.cpp src/adc.c src/twiCshm.c src/MPU9150.cpp src/btle.cpp src/MCP4725.cpp src/cal.cpp src/storage.c src/sampler.cpp)
+list(APPEND SOURCE_FILES src/main.cpp src/serial.cpp src/i2c.cpp src/adc.c src/twiCshm.c src/MPU9150.cpp src/btle.cpp src/MCP4725.cpp src/cal.cpp src/storage.c src/sampler.cpp src/dispatch.cpp)
 
 
 nRF52_addExecutable(${PROJECT_NAME} "${SOURCE_FILES}")

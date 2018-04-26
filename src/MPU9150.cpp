@@ -83,6 +83,11 @@
 
 Mpu9150::Mpu9150(const uint8_t  address, const uint8_t compassAddress): I2cDevice(address), _compassAddress(compassAddress)
 {
+    init();
+}
+
+void Mpu9150::init()
+{
     start();
     
     writeRegsiter(MPU9150_ACCEL_CONFIG, 0b00010000);

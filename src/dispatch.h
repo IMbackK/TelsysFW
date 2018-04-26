@@ -17,29 +17,40 @@
 
 #pragma once
 
-#include "i2c.h"
-#include "point3D.h"
+extern "C" 
+{
 
-#define DEFAULT_MPU9150_I2C_ADDRESS 0x68
-#define DEFAULT_COMPASS_SUBDEVICE_I2C_ADDRESS 0x0C
+}
 
-class Mpu9150 : private I2cDevice
+#include "MPU9150.h"
+#include "MCP4725.h"
+#include "cal.h"
+#include "sampler.h"
+
+class Dispatch
 {
 private:
-    void writeRegsiter( uint8_t address, uint8_t data );
-    const uint8_t _compassAddress;
-public:
     
-    Mpu9150(const uint8_t  address = DEFAULT_MPU9150_I2C_ADDRESS, const uint8_t compassAddress = DEFAULT_COMPASS_SUBDEVICE_I2C_ADDRESS);
+    Mcp4725* _dac;
+    Mpu9150* _mpu;
+    Sampler* _sampler;
+    Cal* _cal;
+
+    //timers
+    app_timer_t* _sleepTimer;
+    app_timer_t* _sampleTimerAdc;
+    app_timer_t* _sampleTimerAux;
     
-    Point3D <int16_t> getAccelData();
-    Point3D <int16_t> getMagnData();
+    uint32_t desierdTicks = 164*2; //Timmer runs at 32768Hz. this value corrsponds to 1/100 of a second.
     
-    int16_t getTemperature();
-    
+    static void deepSleep( void* instance);
     void stop();
     void start();
     
-    void init();
+public: 
     
+    Dispatch(Mcp4725* dac, Mpu9150* mpu, Sampler* sampler, Cal* cal, app_timer_t* sampleTimerAdc, app_timer_t* sampleTimerAux, app_timer_t* sleepTimer);
+    void rxDispatch(uint8_t* buffer, uint32_t length);
+    void onBlteDisconnect();
+    void onBlteConnect();
 };

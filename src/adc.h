@@ -29,6 +29,7 @@ int32_t adcCreateAsyncTask(void (*callbackFunction)(int16_t* buffer, uint16_t le
 
 uint16_t getAdcValue(void);
 
+uint16_t meanAdcValue(uint16_t count);
 
 #ifdef __cplusplus
 }
