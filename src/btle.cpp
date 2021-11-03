@@ -362,7 +362,7 @@ void Btle::_connectionParamatersInit()
 
 void Btle::_connected(ble_evt_t* p_ble_evt)
 {
-  uint32_t    periph_link_cnt = ble_conn_state_n_peripherals(); // Number of peripheral links.
+  uint32_t    periph_link_cnt = ble_conn_state_n_peripherals(); //number of peripheral links.
   
   _connHandle = p_ble_evt->evt.gap_evt.conn_handle;
 
@@ -371,7 +371,7 @@ void Btle::_connected(ble_evt_t* p_ble_evt)
   }
   else
   {
-    //Continue advertising. More connections can be established because the maximum link count has not been reached.
+    //continue advertising, max connections not reatched.
     Btle::start();
   }
   if(notification_instance->_connectCb) notification_instance->_connectCb();
@@ -379,13 +379,13 @@ void Btle::_connected(ble_evt_t* p_ble_evt)
 
 void Btle::_disconnected(ble_evt_t* p_ble_evt)
 {
-  uint32_t    periph_link_cnt = ble_conn_state_n_peripherals(); //Number of peripheral links.
+  uint32_t    periph_link_cnt = ble_conn_state_n_peripherals(); //number of peripheral links.
   
   _connHandle = BLE_CONN_HANDLE_INVALID;
   
   if (periph_link_cnt == (PERIPHERAL_LINK_COUNT - 1))
   {
-    //Advertising is not running when all connections are taken, and must therefore be started.
+    //advertising is not running when all connections are taken, and must therefore be started.
     Btle::start();
   }
   
@@ -474,7 +474,7 @@ void Btle::_btleEventHandler(ble_evt_t* p_ble_evt)
       break;
 
     case BLE_GAP_EVT_SEC_PARAMS_REQUEST:
-      // Pairing not supported
+      //pairing not supported
       err_code = sd_ble_gap_sec_params_reply(p_ble_evt->evt.gap_evt.conn_handle,
           BLE_GAP_SEC_STATUS_PAIRING_NOT_SUPP,
           NULL,
@@ -483,20 +483,20 @@ void Btle::_btleEventHandler(ble_evt_t* p_ble_evt)
       break;
       
     case BLE_GATTS_EVT_SYS_ATTR_MISSING:
-      // No system attributes have been stored.
+      //no system attributes have been stored.
       err_code = sd_ble_gatts_sys_attr_set(p_ble_evt->evt.gap_evt.conn_handle, NULL, 0, 0);
       APP_ERROR_CHECK(err_code);
       break;
 
     case BLE_GATTC_EVT_TIMEOUT:
-      // Disconnect on GATT Client timeout event.
+      //disconnect on gatt client timeout event.
       err_code = sd_ble_gap_disconnect(p_ble_evt->evt.gattc_evt.conn_handle,
           BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
       APP_ERROR_CHECK(err_code);
       break;
 
     case BLE_GATTS_EVT_TIMEOUT:
-      // Disconnect on GATT Server timeout event.
+      //disconnect on gatt server timeout event.
       err_code = sd_ble_gap_disconnect(p_ble_evt->evt.gatts_evt.conn_handle,
           BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
       APP_ERROR_CHECK(err_code);

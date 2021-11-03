@@ -95,28 +95,39 @@ void offsetCallibration(Mcp4725* dac)
     uint16_t value = 0;
     dac->setValue(0);
     
+    #ifdef AMP_POWER_PIN
+    nrf_drv_gpiote_out_set(AMP_POWER_PIN);
+    #endif
+    
     #ifdef SG_PM_PIN
     nrf_drv_gpiote_out_set(SG_PM_PIN);
     #endif
     
     nrf_delay_ms(500);
     
-    while(meanAdcValue(5) > UINT16_MAX/2  && (value & 0xF000) == 0 )
+    while(meanAdcValue(2) > UINT16_MAX/2  && (value & 0xF000) == 0 )
     {
         dac->setValue(value+=8);
         nrf_delay_ms(1);
     }
     nrf_delay_ms(500);
-    while(meanAdcValue(5) < UINT16_MAX/2 && value > 1)
+    while(meanAdcValue(2) < UINT16_MAX/2 && value > 1)
     {
         dac->setValue(value--);
         nrf_delay_ms(1);
     }
-    nrf_drv_gpiote_out_toggle(LED_PIN);
     
-    #ifdef SG_PM_PIN
+    //dac->setStartupValue(value);
+    
+    /*#ifdef SG_PM_PIN
+    #ifdef SG_PM
     nrf_drv_gpiote_out_clear(SG_PM_PIN);
     #endif
+    #endif
     
-    dac->setStartupValue(value);
+    #ifdef AMP_POWER_PIN
+    nrf_drv_gpiote_out_clear(AMP_POWER_PIN);
+    #endif*/
+    
+    //dac->setStartupValue(value);
 }

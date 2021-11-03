@@ -52,12 +52,12 @@ extern "C"
 #include "sampler.h"
 #include "dispatch.h"
 
-void debugBlink()
+static void debugBlink(unsigned delay = 500)
 {
     nrf_drv_gpiote_out_toggle(LED_PIN);
-    nrf_delay_ms(200);
+    nrf_delay_ms(delay);
     nrf_drv_gpiote_out_toggle(LED_PIN);
-    nrf_delay_ms(200);
+    nrf_delay_ms(delay);
 }
 
 void initGpio()
@@ -71,8 +71,11 @@ void initGpio()
     
     #ifdef AMP_POWER_PIN
     nrf_drv_gpiote_out_init(AMP_POWER_PIN, &pinconf);
-    nrf_drv_gpiote_out_clear(AMP_POWER_PIN);
+    //nrf_drv_gpiote_out_set(AMP_POWER_PIN);
     #endif
+    nrf_drv_gpiote_out_init(28, &pinconf);
+    nrf_drv_gpiote_out_set(28);
+    
     
     #ifdef SG_PM_PIN
     nrf_drv_gpiote_out_init(SG_PM_PIN, &pinconf);
@@ -80,7 +83,14 @@ void initGpio()
     #endif
     
     #ifdef SLPSW_PIN
-    nrf_gpio_cfg_sense_input(SG_PM_PIN, NRF_GPIO_PIN_PULLUP, NRF_GPIOTE_POLARITY_TOGGLE);
+    nrf_gpio_cfg_sense_input(SLPSW_NG_PIN, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+    NRF_GPIOTE->INTENSET = GPIOTE_INTENSET_PORT_Msk;
+    NVIC_EnableIRQ(GPIOTE_IRQn);
+    #endif
+    
+    #ifdef SLPSW_NG_PIN
+    nrf_drv_gpiote_out_init(SLPSW_NG_PIN, &pinconf);
+    nrf_drv_gpiote_out_clear(SLPSW_NG_PIN);
     #endif
 }
 
@@ -105,7 +115,6 @@ int main()
     serial.write("btleSeral init \n");
     #endif
     Btle btle;
-    btle.start();
     
     debugBlink();
     
@@ -120,7 +129,11 @@ int main()
     //i2c
     twiCshmInit(DEFAULT_SCL_PIN, DEFAULT_SDA_PIN);
     
+    debugBlink();
+    
     Mpu9150 mpu;
+    
+    debugBlink();
     
     Mcp4725 dac;
     
@@ -146,14 +159,14 @@ int main()
     //dispatch
     Dispatch dispatch(&dac, &mpu, &sampler, &cal, sampleTimerAdc, sampleTimerAux, sleepTimer);
 
-    
     //connect callbacks
     btle.setRxCallback([&dispatch](uint8_t* buffer, uint32_t length){dispatch.rxDispatch(buffer, length);});
     btle.setDisconnectCallback([&dispatch](){dispatch.onBlteDisconnect();});
     btle.setConnectCallback([&dispatch](){dispatch.onBlteConnect();});
-    
 
     nrf_drv_gpiote_out_set(LED_PIN);
+    
+    btle.start();
     
     while(true) __WFE();
     

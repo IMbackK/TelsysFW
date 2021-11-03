@@ -61,10 +61,12 @@ void Sampler::sampleAdc()
     smoothsample = smoothsample + ((getAdcValue() - smoothsample)/SAMPELING_SMOOTHING_FACTOR);
     
     #ifdef SG_PM_PIN
+    #ifdef SG_PM
     nrf_drv_gpiote_out_clear(SG_PM_PIN);
     #endif
+    #endif
     
-    _sampleBuffer[sampleNumber] = _cal->applyTemp(_cal->applyAmp(smoothsample), lastTemperature);
+    _sampleBuffer[sampleNumber] = smoothsample;//_cal->applyTemp(_cal->applyAmp(smoothsample), lastTemperature);
     
     sampleNumber++;
     

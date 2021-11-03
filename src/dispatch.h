@@ -41,6 +41,8 @@ private:
     app_timer_t* _sampleTimerAdc;
     app_timer_t* _sampleTimerAux;
     
+    bool stopped = true;
+    
     uint32_t desierdTicks = 164*2; //Timmer runs at 32768Hz. this value corrsponds to 1/100 of a second.
     
     static void deepSleep( void* instance);

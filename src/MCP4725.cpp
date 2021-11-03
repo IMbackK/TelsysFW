@@ -17,6 +17,7 @@
 
 
 #include "MCP4725.h"
+#include "nrf_delay.h"
 
 Mcp4725::Mcp4725(const uint8_t  address): I2cDevice(address), _value(0)
 {
@@ -32,19 +33,25 @@ void Mcp4725::setValue(const uint16_t value)
 
 void Mcp4725::setStartupValue(const uint16_t value, bool powerOff)
 {
-    uint16_t packet = ((value & 0x00FF) << 8) + ((value & 0b0000111100000000) >> 8) + (powerOff ? 0b1111000000000000 >> 8 : 0b1100000000000000 >> 8);
-    write( (uint8_t*)&packet, 2, true );
+    uint8_t packet[3];
+    packet[0] = 0b01100000;
+    packet[1] = (value & 0b0000111111110000) >> 4;
+    packet[2] = (value & 0b0000000000001111) << 4;
+    write( (uint8_t*)&packet, 3, true );
+    nrf_delay_ms(500);
     setValue(_value);
 }
 
 
 void Mcp4725::off()
 {
-    uint16_t packet = 0b0000000000110000;
-    write( (uint8_t*)&packet, 2, true );
+    //uint16_t packet = 0b0000000000110000;
+    //write( (uint8_t*)&packet, 2, true );
 }
 
 void Mcp4725::on()
 {
+    setValue(_value);
+    nrf_delay_ms(200);
     setValue(_value);
 }

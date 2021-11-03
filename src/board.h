@@ -58,6 +58,7 @@
     #define SAMPLE_CLOCK_PIN    2
     
     #define DEFAULT_MCP4725_ADRESS 0b01100100
+    #define MPU9150_I2C_ADDRESS 0x68
 #endif
 
 #ifdef BOARD_PROTOONE
@@ -104,6 +105,7 @@
     #define LED_PIN             11
     
     #define DEFAULT_MCP4725_ADRESS 0b01100100
+    #define MPU9150_I2C_ADDRESS 0x68
 #endif
 
 #ifdef BOARD_PROTOTOW
@@ -122,19 +124,6 @@
     }
                                     
     //adc config
-    
-    /* #define ADC_CH_CONFIG \
-    {                                                  \
-        .resistor_p = NRF_SAADC_RESISTOR_DISABLED,     \
-        .resistor_n = NRF_SAADC_RESISTOR_DISABLED,     \
-        .gain       = NRF_SAADC_GAIN1_2,               \
-        .reference  = NRF_SAADC_REFERENCE_VDD4,        \
-        .acq_time   = NRF_SAADC_ACQTIME_10US,          \
-        .mode       = NRF_SAADC_MODE_SINGLE_ENDED,     \
-        .burst      = NRF_SAADC_BURST_ENABLED,         \
-        .pin_p      = NRF_SAADC_INPUT_AIN0,            \
-        .pin_n      = NRF_SAADC_INPUT_DISABLED         \
-    }*/
     #define ADC_CH_CONFIG \
     {                                                  \
         .resistor_p = NRF_SAADC_RESISTOR_DISABLED,     \
@@ -142,12 +131,12 @@
         .gain       = NRF_SAADC_GAIN1_2,               \
         .reference  = NRF_SAADC_REFERENCE_VDD4,        \
         .acq_time   = NRF_SAADC_ACQTIME_40US,          \
-        .mode       = NRF_SAADC_MODE_DIFFERENTIAL,     \
+        .mode       = NRF_SAADC_MODE_SINGLE_ENDED,     \
         .burst      = NRF_SAADC_BURST_ENABLED,         \
         .pin_p      = NRF_SAADC_INPUT_AIN0,            \
-        .pin_n      = NRF_SAADC_INPUT_AIN6             \
+        .pin_n      = NRF_SAADC_INPUT_DISABLED             \
     }
-    #define SAADC_SOFTWARE_GAIN 2
+    #define SAADC_SOFTWARE_GAIN 1
 
     //serial
     //#define SERIAL_ENABLED      1
@@ -160,9 +149,16 @@
     
     //gipo pins
     #define LED_PIN             11
-    #define AMP_POWER_PIN       28
+    //#define AMP_POWER_PIN       28
+    #define SLPSW_PIN           6
+    #define SLPSW_NG_PIN        7
     
-    #define DEFAULT_MCP4725_ADRESS 0b01100100
+    
+    #define DEFAULT_MCP4725_ADRESS 0b01100010
+    #define MPU9150_I2C_ADDRESS 0x68
+    
+    #define SLEEP_ENABLED
+    
 #endif
 
 #ifdef BOARD_V_1_0
@@ -181,7 +177,7 @@
     }
                                     
     //adc config
-    #define ADC_CH_CONFIG \
+   /* #define ADC_CH_CONFIG \
     {                                                  \
         .resistor_p = NRF_SAADC_RESISTOR_DISABLED,     \
         .resistor_n = NRF_SAADC_RESISTOR_DISABLED,     \
@@ -192,8 +188,21 @@
         .burst      = NRF_SAADC_BURST_ENABLED,         \
         .pin_p      = NRF_SAADC_INPUT_AIN2,            \
         .pin_n      = NRF_SAADC_INPUT_AIN3             \
+    }*/
+   
+    #define ADC_CH_CONFIG \
+    {                                                  \
+        .resistor_p = NRF_SAADC_RESISTOR_DISABLED,     \
+        .resistor_n = NRF_SAADC_RESISTOR_DISABLED,     \
+        .gain       = NRF_SAADC_GAIN1_2,               \
+        .reference  = NRF_SAADC_REFERENCE_VDD4,        \
+        .acq_time   = NRF_SAADC_ACQTIME_40US,          \
+        .mode       = NRF_SAADC_MODE_SINGLE_ENDED,     \
+        .burst      = NRF_SAADC_BURST_ENABLED,         \
+        .pin_p      = NRF_SAADC_INPUT_AIN2,            \
+        .pin_n      = NRF_SAADC_INPUT_DISABLED             \
     }
-    #define SAADC_SOFTWARE_GAIN 2
+    #define SAADC_SOFTWARE_GAIN 1
 
     //serial
     //#define SERIAL_ENABLED      1
@@ -211,4 +220,5 @@
     #define SG_PM_PIN 20
     
     #define DEFAULT_MCP4725_ADRESS 0b01100000
+    #define MPU9150_I2C_ADDRESS 0x68
 #endif
